@@ -1,0 +1,22 @@
+{
+  "name": "@tankwijzer/vlarem-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared VLAREM knowledge core: tank data model, rules engine, deadlines, brand guard.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "5.9.3",
+    "vitest": "^3.2.0"
+  }
+}

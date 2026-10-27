@@ -1,0 +1,75 @@
+{
+  "description": "Eval set for the rules engine. Each scenario: a tank as the owner entered it, and the statuses/deadlines an inspector expects. Add a scenario for every reviewed correction (from either app).",
+  "scenarios": [
+    {
+      "name": "Bovengrondse stookolietank 5000 l, enkelwandig zonder inkuiping, groene klever 2024",
+      "today": "2026-10-27",
+      "site": { "inWaterProtectionZone": "no" },
+      "tank": {
+        "placement": "above_ground", "wall": "single", "material": "steel", "product": "heating_oil",
+        "capacityL": 5000, "inBund": "no",
+        "inspections": [{ "date": "2024-03-15", "type": "limited", "sticker": "green" }]
+      },
+      "expect": {
+        "VL-BUND-SINGLE-WALL": "attention",
+        "VL-FREQ-LIMITED-ABOVE": "likely_ok",
+        "VL-IDENT-TANK": "unknown"
+      },
+      "absent": ["VL-FREQ-GENERAL-ABOVE", "VL-IDENT-NO-FIRE", "VL-TRANS-KWS"],
+      "deadlines": { "limited": "2027-03-15" }
+    },
+    {
+      "name": "Ondergrondse dieseltank in beschermingszone, limited overdue",
+      "today": "2026-10-27",
+      "site": { "inWaterProtectionZone": "yes", "kwsSeparatorPresent": "no" },
+      "tank": {
+        "placement": "underground", "wall": "double", "material": "steel", "product": "diesel",
+        "capacityL": 10000, "commissioningDate": "2010-05-01",
+        "inspections": [{ "date": "2025-06-01", "type": "limited", "sticker": "green" }]
+      },
+      "expect": {
+        "VL-FREQ-LIMITED-UNDER": "attention",
+        "VL-FREQ-GENERAL-UNDER": "attention",
+        "VL-TRANS-KWS": "attention"
+      },
+      "deadlines": { "limited": "2026-06-01", "general": "2020-05-01", "transition": "2028-01-01" }
+    },
+    {
+      "name": "Ondergrondse GVK-tank: vrijgesteld van algemeen onderzoek",
+      "today": "2026-10-27",
+      "site": { "inWaterProtectionZone": "no" },
+      "tank": {
+        "placement": "underground", "material": "gvk", "product": "heating_oil", "capacityL": 3000,
+        "inspections": [{ "date": "2026-01-10", "type": "limited", "sticker": "green" }]
+      },
+      "expect": { "VL-GVK-UNDER-EXEMPT": "info", "VL-FREQ-LIMITED-UNDER": "likely_ok" },
+      "absent": ["VL-FREQ-GENERAL-UNDER"],
+      "deadlines": { "limited": "2028-01-10" }
+    },
+    {
+      "name": "Benzinetank met overvulfluit en oranje klever",
+      "today": "2026-10-27",
+      "site": {},
+      "tank": {
+        "placement": "above_ground", "wall": "double", "product": "gasoline", "capacityL": 25000,
+        "overfillProtection": "yes", "overfillAlarm": "whistle", "commissioningDate": "2000-01-01",
+        "inspections": [{ "date": "2026-08-31", "type": "limited", "sticker": "orange" }]
+      },
+      "expect": {
+        "VL-STICKER-ORANGE": "attention",
+        "VL-TRANS-OVERFILL-WHISTLE": "likely_ok",
+        "VL-IDENT-NO-FIRE": "unknown",
+        "VL-FREQ-GENERAL-ABOVE": "attention"
+      },
+      "deadlines": { "orange_reinspection": "2027-02-28", "general": "2020-01-01" }
+    },
+    {
+      "name": "Nieuwe tank zonder keuring, plaatsing onbekend",
+      "today": "2026-10-27",
+      "site": {},
+      "tank": {},
+      "expect": { "VL-FREQ-COMMISSIONING": "attention", "VL-FREQ-LIMITED-ABOVE": "unknown" },
+      "deadlines": {}
+    }
+  ]
+}

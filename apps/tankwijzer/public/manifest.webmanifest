@@ -1,0 +1,13 @@
+{
+  "name": "Tankwijzer",
+  "short_name": "Tankwijzer",
+  "description": "Uw opslagtanks, regels en keuringen op één plek.",
+  "lang": "nl-BE",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f5",
+  "theme_color": "#0f5c4d",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
