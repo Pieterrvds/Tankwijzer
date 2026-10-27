@@ -91,6 +91,16 @@ export function InspectionListPage() {
         )
       }
     >
+      {import.meta.env.VITE_PREVIEW === 'true' && (
+        <Card className="mb-4 border-sky-700 bg-sky-50">
+          <p className="font-semibold">Voorbeeldversie</p>
+          <p className="text-sm">
+            Je gegevens blijven enkel in deze browser. Spraakopname werkt niet in dit voorbeeld;
+            foto’s kies je met de camera of uit je galerij.
+          </p>
+        </Card>
+      )}
+
       {creating && <NewInspectionForm onCancel={() => setCreating(false)} />}
 
       {inspections?.length === 0 && !creating && (

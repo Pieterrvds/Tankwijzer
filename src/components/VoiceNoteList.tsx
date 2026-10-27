@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { askConfirm } from '../lib/confirm';
 import { formatDuration } from '../capture/audio';
 import { db, type VoiceNoteRecord } from '../db/db';
 import { repo } from '../db/repository';
@@ -52,7 +53,11 @@ function VoiceNote({
       )}
       <button
         type="button"
-        onClick={() => confirm(`${note.label} verwijderen?`) && void repo.deleteVoiceNote(note.id)}
+        onClick={() =>
+          void askConfirm(`${note.label} verwijderen?`).then((ok) => {
+            if (ok) void repo.deleteVoiceNote(note.id);
+          })
+        }
         className="mt-2 min-h-12 rounded-lg px-3 font-semibold text-nok"
       >
         Verwijderen

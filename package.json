@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "npm run lint && npm run format:check && npm run typecheck && npm run test",
-    "docs:rules": "vite-node scripts/generate-rules-doc.ts"
+    "docs:rules": "vite-node scripts/generate-rules-doc.ts",
+    "build:preview": "vite build --mode preview-artifact && node scripts/inline-preview.mjs"
   },
   "dependencies": {
     "dexie": "^4.4.7",

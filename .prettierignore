@@ -5,3 +5,4 @@ package-lock.json
 coverage
 public
 docs/rules.md
+dist-preview

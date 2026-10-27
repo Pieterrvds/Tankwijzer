@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { askConfirm } from '../lib/confirm';
 import { Link, useNavigate } from 'react-router-dom';
 import { checklistFor, checklistProgress, sectionProgress, statusOf } from '../checklist';
 import { Layout } from '../components/Layout';
@@ -244,11 +245,15 @@ export function InspectionPage() {
       <Button
         variant="danger"
         className="w-full"
-        onClick={() => {
-          if (confirm('Deze inspectie met alle foto’s en spraaknotities definitief verwijderen?')) {
-            void repo.deleteInspection(id).then(() => navigate('/'));
-          }
-        }}
+        onClick={() =>
+          void askConfirm(
+            'Deze inspectie met alle foto’s en spraaknotities definitief verwijderen?',
+          ).then(async (ok) => {
+            if (!ok) return;
+            await repo.deleteInspection(id);
+            navigate('/');
+          })
+        }
       >
         Inspectie verwijderen
       </Button>

@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { askConfirm } from '../lib/confirm';
 import { useState } from 'react';
 import { db, type PhotoRecord } from '../db/db';
 import { repo } from '../db/repository';
@@ -63,12 +64,13 @@ export function PhotoViewer({
         />
         <button
           type="button"
-          onClick={() => {
-            if (confirm('Foto verwijderen?')) {
+          onClick={() =>
+            void askConfirm('Foto verwijderen?').then((ok) => {
+              if (!ok) return;
               void repo.deletePhoto(photo.id);
               onClose();
-            }
-          }}
+            })
+          }
           className="h-14 w-full rounded-xl border-2 border-nok font-semibold text-nok"
         >
           Foto verwijderen

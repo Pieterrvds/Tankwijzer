@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { askConfirm } from '../lib/confirm';
 import { Layout } from '../components/Layout';
 import { Button, Card, ChoiceField, SectionHeading, TextArea, TextField } from '../components/ui';
 import { repo } from '../db/repository';
@@ -99,8 +100,9 @@ function VorigeKeuringForm({ inspection }: { inspection: Inspection }) {
                   type="button"
                   className="min-h-12 px-3 font-semibold text-nok"
                   onClick={() =>
-                    confirm('Opmerking verwijderen?') &&
-                    void updateRemarks((all) => all.filter((x) => x.id !== r.id))
+                    void askConfirm('Opmerking verwijderen?').then((ok) => {
+                      if (ok) void updateRemarks((all) => all.filter((x) => x.id !== r.id));
+                    })
                   }
                 >
                   Verwijderen

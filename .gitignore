@@ -10,3 +10,4 @@ coverage
 *.log
 test-results
 playwright-report
+dist-preview
