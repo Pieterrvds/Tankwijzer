@@ -1,0 +1,76 @@
+{
+  "$comment": "Exact standard sentences from the inspector's BEPO report guidelines. Use VERBATIM when a finding matches. Placeholders in [brackets] are filled in by the app. Do not reword. severity = null means the default category is not yet confirmed by the inspector.",
+  "version": 1,
+  "sentences": {
+    "lekdetectie_ontbreekt": {
+      "severity": "tekortkoming",
+      "section": "T8",
+      "text_nl": "Een lekdetectiesysteem conform bijlage 5.17.3 dient geplaatst te worden (art. 5.17.4.1.21), uitgerust met akoestisch & visueel signaal."
+    },
+    "kenplaat_lekdetectie": {
+      "severity": "tekortkoming",
+      "section": "T8",
+      "text_nl": "Het lekdetectiesysteem dient voorzien te zijn van een kenplaat, met o.a. een verwijzing naar het prototypekeurnummer, conform bijlage 5.17.3. (art. 5.17.4.1.21)"
+    },
+    "overvulsysteem_ontbreekt": {
+      "severity": "tekortkoming",
+      "section": "T11",
+      "text_nl": "Er dient een systeem tegen overvulling (type overvulwaarschuwingssysteem of overvulbeveiligingssysteem) te worden geplaatst conform bijlage 5.17.7. Dit systeem dient afzonderlijk te zijn van de niveaumeting."
+    },
+    "kenplaat_overvulsysteem": {
+      "severity": "tekortkoming",
+      "section": "T11",
+      "text_nl": "Het systeem tegen overvulling dient voorzien te worden van een kenplaat, met o.a. een verwijzing naar het prototypekeurnummer, conform bijlage 5.17.7. (art. 5.17.4.1.17)"
+    },
+    "identificatie_inhoud": {
+      "severity": "opmerking",
+      "section": "T18",
+      "text_nl": "Identificatie bij het vulpunt en de tank dienen aangevuld te worden met de tankinhoud (art. 5.17.4.3.5. §2.)."
+    },
+    "leidingen_dichtheid": {
+      "severity": null,
+      "section": "T7",
+      "text_nl": "De dichtheid van de leidingen, koppelingen, kranen en toebehoren dienen verzekerd te zijn (art. 5.17.4.1.4.§1)."
+    },
+    "lospiste_nok": {
+      "severity": "tekortkoming",
+      "section": "T17",
+      "text_nl": "De standplaats van de tankwagen is uitgerust met een vaste vloeistofdichte zone van minimaal 8 m² met nodige hellingen zodat gelekte vloeistoffen afvloeien naar een opvangsysteem (art. 5.17.4.1.16. 6° a)."
+    },
+    "levensduur_thermoplast": {
+      "severity": null,
+      "section": "T3",
+      "text_nl": "De houder is einde levensduur op [datum] op basis van de maximale levensduur van 25 jaar voor thermoplastische houders."
+    },
+    "levensduur_verstreken": {
+      "severity": "tekortkoming",
+      "section": "T3",
+      "text_nl": "De tank dient opnieuw berekend te worden voor een verlengde levensduur wegens verstrijken van de huidige berekende levensduur."
+    },
+    "omgevingsvergunning_verlopen": {
+      "severity": null,
+      "section": "T5",
+      "text_nl": "De vergunningstermijn is verlopen. De nieuwe omgevingsvergunning is ons nog voor te leggen van zodra beschikbaar."
+    },
+    "omgevingsvergunning_niet_voorgelegd": {
+      "severity": null,
+      "section": "T5",
+      "text_nl": "De omgevingsvergunning is ons nog voor te leggen van zodra beschikbaar (art. 5.17.4.3.16.§1.1°)."
+    },
+    "conformiteitsattest": {
+      "severity": null,
+      "section": "T5",
+      "text_nl": "De verklaring van conformiteit van de tankbouwer dient voorgelegd te worden (art. 5.17.4.3.3)."
+    },
+    "peilmeting_is_overvulsysteem": {
+      "severity": "informatie",
+      "section": "T12",
+      "text_nl": "De peilmeting en systeem tegen overvulling dienen twee aparte, van elkaar onafhankelijke systemen zoals beschreven staat in de omzendbrief van departement Omgeving."
+    },
+    "ongeschikt_product_vlampunt": {
+      "severity": null,
+      "section": "T4",
+      "text_nl": "De houder mag niet gevuld worden met [product] inzake te laag vlampunt. Volgens de constructiecode [norm] is de houder enkel geschikt voor de opslag van gevaarlijke vloeistoffen met een vlampunt niet lager dan [x] °C."
+    }
+  }
+}

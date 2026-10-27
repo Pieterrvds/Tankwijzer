@@ -1,0 +1,47 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens. High contrast for use in sunlight, big tap targets for gloves.
+ * Status colours follow the usual OK/NOK convention; "te bevestigen" mirrors the BEPO report
+ * convention: blue text (#0070C0) on yellow highlight.
+ */
+@theme {
+  --color-brand: #0b3d2e;
+  --color-brand-light: #14684e;
+  --color-ok: #146c2e;
+  --color-nok: #b3141c;
+  --color-nvt: #4b5563;
+  --color-bevestigen-text: #0070c0;
+  --color-bevestigen-bg: #ffff00;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  @apply bg-white text-gray-950 antialiased;
+  font-size: 18px;
+  overscroll-behavior-y: none;
+}
+
+/* Visible keyboard focus everywhere. */
+:focus-visible {
+  outline: 3px solid var(--color-brand-light);
+  outline-offset: 2px;
+}
+
+.te-bevestigen {
+  color: var(--color-bevestigen-text);
+  background: var(--color-bevestigen-bg);
+}
+
+/* Prevent iOS long-press menus while holding the record button. */
+.no-callout {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
