@@ -73,7 +73,7 @@ export function emptyPreviousInspection(): PreviousInspection {
 
 export function newInspection(
   fields: Partial<
-    Pick<Inspection, 'klant' | 'plaatsVanOnderzoek' | 'datum' | 'verslagnummer'>
+    Pick<Inspection, 'klant' | 'plaatsVanOnderzoek' | 'datum' | 'verslagnummer' | 'omschrijving'>
   > = {},
 ): Inspection {
   const now = nowIso();
@@ -87,6 +87,9 @@ export function newInspection(
     plaatsVanOnderzoek: fields.plaatsVanOnderzoek ?? '',
     datum: fields.datum ?? todayIsoDate(),
     verslagnummer: fields.verslagnummer ?? '',
+    omschrijving: fields.omschrijving ?? '',
+    vorigVerslag: null,
+    verborgenHints: [],
     waterwingebied: null,
     tank: emptyTank(),
     product: emptyProduct(),
@@ -125,8 +128,9 @@ export const STATUS_LABEL: Record<ItemStatus, string> = {
   NIET_GECONTROLEERD: 'Nog niet gecontroleerd',
 };
 
-/** Short tank label for lists: "Tank 3 — 5 000 l mazout". */
+/** Short tank label for lists: the inspector's description, else "Tank 3 · 5 000 l · mazout". */
 export function tankLabel(i: Inspection): string {
+  if (i.omschrijving.trim()) return i.omschrijving.trim();
   const parts: string[] = [];
   if (i.tank.internTanknr) parts.push(`Tank ${i.tank.internTanknr}`);
   if (i.tank.inhoudLiter !== null) parts.push(`${i.tank.inhoudLiter.toLocaleString('nl-BE')} l`);

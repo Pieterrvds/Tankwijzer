@@ -1,0 +1,11 @@
+{
+  "id": "alarmfluit-2027",
+  "vraag": "Volstaat deze alarmfluit nog als systeem tegen overvulling?",
+  "vorigVerslag": "T11 Systeem tegen overvulling | Type: alarmfluit | OK",
+  "notities": ["Alarmfluit op de ontluchting, fluit hoorbaar bij vullen."],
+  "verwacht": {
+    "bevat": ["2027"],
+    "zekerheid_in": ["hoog", "middel"],
+    "bron_in": ["regel", "vorig_verslag"]
+  }
+}

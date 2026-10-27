@@ -65,7 +65,12 @@ export default defineConfig(({ mode }) => {
         },
     test: {
       environment: 'node',
-      include: ['src/**/*.test.ts', 'knowledge/**/*.test.ts'],
+      include: [
+        'src/**/*.test.ts',
+        'knowledge/**/*.test.ts',
+        'server/**/*.test.ts',
+        'evals/**/*.test.ts',
+      ],
     },
   };
 });

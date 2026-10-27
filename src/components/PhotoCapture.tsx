@@ -1,25 +1,22 @@
 import { useRef, useState } from 'react';
+import { kickQueue } from '../ai/queue';
 import { processPhoto } from '../capture/photo';
 import { repo } from '../db/repository';
-
-interface Props {
-  inspectionId: string;
-  /** null = add to the "ongesorteerd" tray. */
-  itemId: string | null;
-  label?: string;
-  className?: string;
-}
+import { kickSync } from '../sync/sync';
 
 /**
- * Camera button. Uses a plain file input with `capture="environment"`: on phones this opens
- * the rear camera directly, works offline, and needs no camera permission handling.
+ * Camera button. A plain file input with `capture="environment"`: on phones this opens the rear
+ * camera directly, works offline, and needs no camera permission handling.
  */
 export function PhotoCaptureButton({
   inspectionId,
-  itemId,
   label = 'Foto',
   className = '',
-}: Props) {
+}: {
+  inspectionId: string;
+  label?: string;
+  className?: string;
+}) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,9 +27,10 @@ export function PhotoCaptureButton({
     setError(null);
     try {
       for (const file of Array.from(files)) {
-        const photo = await processPhoto(file);
-        await repo.addPhoto({ inspectionId, itemId, ...photo });
+        await repo.addPhoto({ inspectionId, ...(await processPhoto(file)) });
       }
+      kickSync();
+      void kickQueue();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Foto kon niet bewaard worden');
     } finally {
@@ -42,14 +40,17 @@ export function PhotoCaptureButton({
   }
 
   return (
-    <>
+    <div className={className}>
       <button
         type="button"
         disabled={busy}
         onClick={() => input.current?.click()}
-        className={`flex min-h-14 items-center justify-center gap-2 rounded-xl border-2 border-gray-900 bg-white px-4 text-lg font-semibold active:bg-gray-100 disabled:opacity-50 ${className}`}
+        className="flex min-h-16 w-full flex-col items-center justify-center rounded-xl bg-brand px-2 font-semibold text-white active:bg-brand-light disabled:opacity-50"
       >
-        <span aria-hidden>📷</span> {busy ? 'Bewaren…' : label}
+        <span className="text-2xl" aria-hidden>
+          📷
+        </span>
+        <span className="text-sm">{busy ? 'Bewaren…' : label}</span>
       </button>
       <input
         ref={input}
@@ -61,6 +62,6 @@ export function PhotoCaptureButton({
         onChange={(e) => void onFiles(e.target.files)}
       />
       {error && <p className="mt-1 text-sm font-semibold text-nok">{error}</p>}
-    </>
+    </div>
   );
 }

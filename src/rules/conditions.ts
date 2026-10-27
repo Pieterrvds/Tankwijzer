@@ -11,7 +11,7 @@
  * (empty field, item not yet checked) is `unknown`, not `false`. A rule only fires when its
  * trigger is definitely `true`. This is how "never invent values" is enforced for rules.
  */
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 export const Operator = z.enum([
   'eq',

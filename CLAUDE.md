@@ -2,26 +2,38 @@
 
 **KeurKompas** ("je kompas op het terrein") is a mobile-first, offline-first field app for a
 Flemish _milieudeskundige_ who inspects storage tanks under **VLAREM II, hoofdstuk 5.17**.
-It captures photos, voice notes and checklist results per tank, structured as the
-**BEPO report** (beperkt onderzoek bovengrondse houder, Corcon bv template, tables T0–T20),
-and exports a package the inspector uses at the office to write the report.
+
+**What it is (course correction, see the inspector's brief):** not a checklist and not a
+report filler. The inspector **captures** (photo, voice, text — one tap, offline), and **asks**
+("Vraag het") when unsure. The assistant answers from the **previous report**, `knowledge/`
+(rules, standard sentences, VLAREM text, approved lessons) and what was just captured, with its
+sources and certainty. In the background it **sorts** every photo and note into a BEPO section
+(T2–T20), and everything is **synced to the inspector's OneDrive** → PC, sorted per inspection.
+It gets smarter through **lessons**: corrections the inspector approves.
 
 The user is not a full-time developer: explain decisions briefly, keep code clean and
 commented, and work in small, tested steps.
 
 ## Non-negotiable principles
 
-1. **The AI suggests, the inspector decides.** Every AI proposal carries a reason, an article
-   reference, a source and a confidence. Nothing is applied without the inspector's tap.
-   Uncertain values are marked _te bevestigen_ (blue `#0070C0` on yellow, like the report).
-2. **Never invent values.** Unknown = empty/`null`. A field the AI cannot read stays empty.
-3. **Independence rule.** Never recommend or mention brands, products or suppliers in any
+1. **The AI suggests, the inspector decides.** Every answer carries its sources and a
+   certainty. Uncertain → _te bevestigen_ (blue `#0070C0` on yellow, like the report).
+2. **Grounded answers only.** Sources: previous report, `knowledge/`, the captured
+   photo/voice/text. Not covered → "Niet zeker — controleer ter plaatse." Never guess.
+3. **Safe learning loop.** 👎 + correction → proposed lesson → only used after the inspector
+   approves it (Lessen screen). Approved lessons go to OneDrive, then into
+   `knowledge/lessons.md` and an eval case in `evals/`. Nothing changes behaviour unapproved.
+4. **No gates.** No mandatory checklist, no blocking. Rule hints are gentle and dismissible.
+5. **Never invent values.** Unknown = empty/`null`. A field the AI cannot read stays empty.
+6. **Independence rule.** Never recommend or mention brands, products or suppliers in any
    proposed text. Refer only to the VLAREM requirement. `src/rules/brands.ts` blocks names from
    `knowledge/brand-blocklist.json` in rule output; tests check all rule texts.
-4. **Offline-first.** Everything works without network; data stays on the device until export.
-5. **Law from the repo, not from model memory.** Rules and wording live in `knowledge/`.
+7. **Offline-first.** Capture always works; AI and sync jobs queue until there is signal.
+8. **Law from the repo, not from model memory.** Rules and wording live in `knowledge/`.
    Standard sentences are used **verbatim**.
-6. **Section codes match the report exactly** (T2–T20), so the export maps 1:1.
+9. **Section codes match the report exactly** (T2–T20), so the sorted export maps 1:1.
+10. **API keys never in the app.** The phone talks to our server (`server/`), which holds the
+    Anthropic/Mistral keys. OneDrive goes directly from the phone with the user's own login.
 
 ## Report conventions (for exported text)
 
@@ -69,22 +81,21 @@ commented, and work in small, tested steps.
 
 ```
 src/
-  domain/      Zod schemas (single source of truth) + factories. Shared with backend later.
-  checklist/   BEPO checklist definitions (T2–T19), file naming.
-               ondergronds.ts = PLACEHOLDER module for underground tanks (TODO).
-  rules/       Rules engine: condition language, facts, evaluation, brand check,
-               vergeet-niet + close check, rule review, docs/rules.md generator.
+  ai/          Assistant: shared schemas + instructions, request building, background queue
+               (transcribe → read report → answer → sort), server and preview providers.
+  sync/        OneDrive: Microsoft login (MSAL), Graph upload, upload plan, notes.md, loop.
+  domain/      Zod schemas for the inspection + factories.
+  checklist/   BEPO section/item definitions (T2–T19) — used invisibly: sorting, rules, names.
+  rules/       Rules engine (hints), brand check, rule review, docs/rules.md generator.
   db/          Dexie (IndexedDB) database + repository (all writes go through here).
-  capture/     Photo compression/EXIF, audio recording helpers.
-  components/  UI building blocks (ItemCard, PhotoCapture, VoiceRecorder, …).
-  pages/       Screens (routes).
-  lib/         Small utilities (number parsing, hooks).
-knowledge/
-  standard-sentences.json   Verbatim standard sentences.
-  rules/                    Deterministic rules (JSON) + their tests.
-  brand-blocklist.json      Names that may never appear in proposed texts.
-  text/                     VLAREM II source text (added by the user).
-docs/          architecture.md, data-model.md, rules.md, examples/
+  capture/     Photo compression/EXIF, audio recording, previous-report reading (PDF/Word).
+  components/  UI (Timeline, Composers, VorigeKeuringCard, Hints, AnswerView, …).
+  pages/       Screens: list, inspection, settings, lessons, rule review.
+server/        Cloudflare Worker (Hono): /api/ask, /api/extract, /api/tag, /api/transcribe.
+knowledge/     context.md, standard-sentences.json, rules/, lessons.md, vocabulary.json,
+               brand-blocklist.json, text/ (VLAREM text, added by the user).
+evals/         Eval cases every prompt/knowledge/model change must pass (npm run evals).
+docs/          SETUP.md (deploy), architecture.md, data-model.md, rules.md, examples/
 ```
 
 ## Commands
@@ -97,6 +108,10 @@ npm test             # unit tests (Vitest)
 npm run build        # production build incl. service worker
 npm run preview      # serve the production build (test offline/install here)
 npm run docs:rules   # regenerate docs/rules.md after changing knowledge/rules
+npm run knowledge:bundle  # regenerate the server's knowledge after changing knowledge/
+npm run evals        # run the eval cases against Claude (needs ANTHROPIC_API_KEY; costs cents)
+npm run server:dev   # run the API locally (server/.dev.vars holds local secrets)
+npm run build:preview  # one-file preview page (assistant via claude.ai, no server)
 ```
 
 ## Coding conventions
@@ -111,8 +126,15 @@ npm run docs:rules   # regenerate docs/rules.md after changing knowledge/rules
 - Choice-field option texts are referenced by rules: change both together (a test checks).
 - Bump `SCHEMA_VERSION` when `inspection.json` changes incompatibly.
 
-## Milestones
+## Milestones (after the course correction)
 
-M0 Foundation ✅ · M1 Offline capture ✅ · M2 Rules engine + vergeet-niet ✅ · M3 Export v1 (ZIP)
-· M4 Voice AI · M5 Photo AI · M6 Draft T20 + sticker proposal · M7 Sync v2 + `keurkompas pull`.
-Finish one, demo it, wait for the user's OK, then continue.
+1. Capture stream (photo, voice, text) + offline storage ✅
+2. Previous report import + summary card ✅
+3. Sync to PC via OneDrive/Graph ✅ (ZIP + share sheet fallback: todo)
+4. Voice transcription + background sorting into T-sections ✅
+5. "Vraag het" with grounded answers and sources ✅
+6. Feedback → lessons → review screen → evals ✅ (lessons → knowledge/lessons.md by hand)
+7. Gentle hints from rules + previous report ✅
+
+Model: Claude Opus 5.5 (`claude-opus-5-5`) with structured outputs, prompt caching and
+server-side fallback. Change only with the evals passing.

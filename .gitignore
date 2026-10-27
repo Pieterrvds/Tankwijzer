@@ -11,3 +11,6 @@ coverage
 test-results
 playwright-report
 dist-preview
+.dev.vars
+server/.wrangler
+.wrangler

@@ -10,9 +10,11 @@ interface Props {
   children: ReactNode;
   /** Sticky bar at the bottom (thumb zone) for the main actions. */
   bottom?: ReactNode;
+  /** Extra button in the header, e.g. settings. */
+  action?: ReactNode;
 }
 
-export function Layout({ title, subtitle, back, children, bottom }: Props) {
+export function Layout({ title, subtitle, back, children, bottom, action }: Props) {
   const online = useOnline();
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col">
@@ -37,6 +39,7 @@ export function Layout({ title, subtitle, back, children, bottom }: Props) {
           <h1 className="truncate text-xl leading-tight font-bold">{title}</h1>
           {subtitle && <p className="truncate text-sm text-white/85">{subtitle}</p>}
         </div>
+        {action}
         <span
           className={`mr-2 shrink-0 rounded-full px-2 py-1 text-xs font-semibold ${
             online ? 'bg-white/15 text-white' : 'bg-amber-300 text-gray-950'

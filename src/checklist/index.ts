@@ -47,8 +47,22 @@ export function paddedSection(code: string): string {
   return code.replace(/^T(\d)$/, 'T0$1');
 }
 
-/** Consistent photo file name, e.g. T10_inkuiping_01.jpg. */
-export function photoFileName(item: ItemDefinition | null, index: number): string {
+/** File-name slug of a section title: T10 → "inkuiping", T11 → "systeem_tegen_overvulling". */
+export function sectionSlug(code: string): string {
+  const title =
+    BEPO_BOVENGRONDS.sections.find((s) => s.code === code)?.title ??
+    (code === 'T20' ? 'resultaat' : '');
+  return title
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_|_$/g, '');
+}
+
+/** Consistent photo file name: T10_inkuiping_01.jpg, or FOTO_01.jpg when not sorted (yet). */
+export function photoFileName(sectie: string | null, index: number): string {
   const n = String(index).padStart(2, '0');
-  return item ? `${paddedSection(item.section)}_${item.slug}_${n}.jpg` : `ONGESORTEERD_${n}.jpg`;
+  const slug = sectie ? sectionSlug(sectie) : '';
+  return sectie && slug ? `${paddedSection(sectie)}_${slug}_${n}.jpg` : `FOTO_${n}.jpg`;
 }

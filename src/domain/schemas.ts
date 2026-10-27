@@ -8,10 +8,11 @@
  * Binary data (photos, audio) is NOT part of these schemas: it lives in separate IndexedDB
  * tables (see src/db/db.ts) and is referenced by id.
  */
-import { z } from 'zod';
+import { z } from 'zod/v4';
+import { PreviousReportFacts } from '../ai/schemas';
 
 /** Bump when the shape of `inspection.json` changes in a non-backwards-compatible way. */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 // ---------------------------------------------------------------------------
 // Enumerations
@@ -202,7 +203,23 @@ export const Finding = z.object({
 export type Finding = z.infer<typeof Finding>;
 
 // ---------------------------------------------------------------------------
-// Inspection (one inspection = one tank; the export produces one ZIP per tank)
+// Previous report, as imported on the phone (v2)
+// ---------------------------------------------------------------------------
+
+export const PreviousReport = z.object({
+  fileName: z.string(),
+  /** Text extracted on the device (tables as "cell | cell" lines). */
+  text: z.string(),
+  importedAt: z.string(),
+  /** wachtend = text ready, waiting for the assistant to read it (needs network). */
+  status: z.enum(['wachtend', 'bezig', 'klaar', 'mislukt']),
+  facts: PreviousReportFacts.nullable(),
+  error: z.string().nullable(),
+});
+export type PreviousReport = z.infer<typeof PreviousReport>;
+
+// ---------------------------------------------------------------------------
+// Inspection (one inspection = one tank; one OneDrive folder per inspection)
 // ---------------------------------------------------------------------------
 
 export const Inspection = z.object({
@@ -218,6 +235,12 @@ export const Inspection = z.object({
   datum: z.string(),
   /** Optional, format bepo.JJ.XXXX. */
   verslagnummer: z.string(),
+  /** Free description of the tank, e.g. "Tank 3 — mazout 5 000 l" (v2). */
+  omschrijving: z.string(),
+  /** The previous report, or null when none was added (v2). */
+  vorigVerslag: PreviousReport.nullable(),
+  /** Rule ids of hints the inspector dismissed for this inspection (v2). */
+  verborgenHints: z.array(z.string()),
 
   /** T2 — Algemene gegevens. */
   waterwingebied: z.boolean().nullable(),

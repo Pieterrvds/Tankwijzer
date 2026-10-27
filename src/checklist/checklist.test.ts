@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { newInspection } from '../domain/factories';
 import { SectionCode, type Inspection } from '../domain/schemas';
 import { BEPO_BOVENGRONDS } from './bepo-bovengronds';
-import { checklistFor, checklistProgress, findItem, paddedSection, photoFileName } from './index';
+import { checklistFor, checklistProgress, paddedSection, photoFileName } from './index';
 import { ONDERGRONDS_PLACEHOLDER } from './ondergronds';
 
 function inspection(change: (i: Inspection) => void = () => {}): Inspection {
@@ -45,13 +45,11 @@ describe('BEPO checklist structure', () => {
 });
 
 describe('photo file names', () => {
-  it('pads the section and numbers per item', () => {
-    const item = findItem(BEPO_BOVENGRONDS, 'T6.buitenwand') ?? null;
-    expect(photoFileName(item, 1)).toBe('T06_buitenwand_01.jpg');
-    expect(photoFileName(findItem(BEPO_BOVENGRONDS, 'T10.dichtheid') ?? null, 12)).toBe(
-      'T10_dichtheid_12.jpg',
-    );
-    expect(photoFileName(null, 3)).toBe('ONGESORTEERD_03.jpg');
+  it('names photos per section, padded, numbered', () => {
+    expect(photoFileName('T6', 1)).toBe('T06_visuele_controle_01.jpg');
+    expect(photoFileName('T10', 12)).toBe('T10_inkuiping_12.jpg');
+    expect(photoFileName('T11', 1)).toBe('T11_systeem_tegen_overvulling_01.jpg');
+    expect(photoFileName(null, 3)).toBe('FOTO_03.jpg');
     expect(paddedSection('T19')).toBe('T19');
   });
 });

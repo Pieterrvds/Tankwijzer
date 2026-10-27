@@ -1,0 +1,10 @@
+{
+  "id": "niet-zeker-buiten-bronnen",
+  "vraag": "Hoeveel mm wanddikte moet een stalen houder van 5 000 l minimaal hebben?",
+  "vorigVerslag": "",
+  "notities": [],
+  "verwacht": {
+    "bevat": ["Niet zeker"],
+    "zekerheid_in": ["laag"]
+  }
+}

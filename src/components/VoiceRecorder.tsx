@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { formatDuration, isAudioRecordingSupported, pickAudioMimeType } from '../capture/audio';
+import { kickQueue } from '../ai/queue';
 import { repo } from '../db/repository';
+import { kickSync } from '../sync/sync';
 
 /** Recordings shorter than this are treated as an accidental tap. */
 const MIN_DURATION_MS = 700;
 
 interface Props {
   inspectionId: string;
-  itemId: string | null;
   className?: string;
 }
 
@@ -15,7 +16,7 @@ interface Props {
  * Hold-to-record button (walkie-talkie style): press and hold to record, release to save.
  * Audio is stored offline in IndexedDB; transcription happens later, when online (M4).
  */
-export function VoiceRecordButton({ inspectionId, itemId, className = '' }: Props) {
+export function VoiceRecordButton({ inspectionId, className = '' }: Props) {
   const [state, setState] = useState<'idle' | 'starting' | 'recording'>('idle');
   const [elapsed, setElapsed] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
@@ -28,6 +29,13 @@ export function VoiceRecordButton({ inspectionId, itemId, className = '' }: Prop
     const t = setInterval(() => setElapsed(Date.now() - startedAt.current), 250);
     return () => clearInterval(t);
   }, [state]);
+
+  // Short-lived message above the capture bar.
+  useEffect(() => {
+    if (!message) return;
+    const t = setTimeout(() => setMessage(null), 4000);
+    return () => clearTimeout(t);
+  }, [message]);
 
   // Stop a running recording if the component disappears (e.g. navigation).
   useEffect(() => () => recorder.current?.stop(), []);
@@ -78,12 +86,15 @@ export function VoiceRecordButton({ inspectionId, itemId, className = '' }: Prop
       void repo
         .addVoiceNote({
           inspectionId,
-          itemId,
           blob: new Blob(chunks, { type }),
           mimeType: type,
           durationMs,
         })
-        .then((note) => setMessage(`${note.label} bewaard (${formatDuration(durationMs)}).`));
+        .then((note) => {
+          setMessage(`${note.label} bewaard (${formatDuration(durationMs)}).`);
+          kickSync();
+          void kickQueue();
+        });
     };
     recorder.current = rec;
     startedAt.current = Date.now();
@@ -106,10 +117,10 @@ export function VoiceRecordButton({ inspectionId, itemId, className = '' }: Prop
     <div className={className}>
       <button
         type="button"
-        className={`no-callout flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border-2 px-4 text-lg font-semibold ${
+        className={`no-callout flex min-h-16 w-full flex-col items-center justify-center rounded-xl px-2 font-semibold ${
           recording
-            ? 'animate-pulse border-nok bg-nok text-white'
-            : 'border-gray-900 bg-white text-gray-950'
+            ? 'animate-pulse bg-nok text-white'
+            : 'bg-brand text-white active:bg-brand-light'
         }`}
         onPointerDown={(e) => {
           e.preventDefault();
@@ -122,17 +133,22 @@ export function VoiceRecordButton({ inspectionId, itemId, className = '' }: Prop
         onContextMenu={(e) => e.preventDefault()}
         aria-label="Houd ingedrukt om een spraaknotitie op te nemen"
       >
-        <span aria-hidden>🎤</span>
-        {recording ? (
-          `Opname ${formatDuration(elapsed)}`
-        ) : (
-          <span className="flex flex-col leading-tight">
-            <span>{state === 'starting' ? 'Microfoon…' : 'Spraak'}</span>
-            <span className="text-xs font-normal">houd ingedrukt</span>
-          </span>
-        )}
+        <span className="text-2xl" aria-hidden>
+          🎤
+        </span>
+        <span className="text-sm">
+          {recording
+            ? `Opname ${formatDuration(elapsed)}`
+            : state === 'starting'
+              ? 'Microfoon…'
+              : 'Houd in: spraak'}
+        </span>
       </button>
-      {message && <p className="mt-1 text-sm text-gray-700">{message}</p>}
+      {message && (
+        <p className="absolute right-4 bottom-full left-4 mb-2 rounded-lg bg-gray-950 p-2 text-center text-sm text-white">
+          {message}
+        </p>
+      )}
     </div>
   );
 }

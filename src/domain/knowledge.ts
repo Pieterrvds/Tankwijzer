@@ -4,7 +4,7 @@
  * - knowledge/standard-sentences.json — exact wording, used verbatim.
  * - knowledge/rules/*.json — deterministic rules evaluated by code (M2).
  */
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { Condition } from '../rules/conditions';
 import { SectionCode, Severity } from './schemas';
 

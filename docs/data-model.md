@@ -1,98 +1,70 @@
 # Data model
 
-Source of truth: [`src/domain/schemas.ts`](../src/domain/schemas.ts) (Zod). Summary:
+Sources of truth: [`src/domain/schemas.ts`](../src/domain/schemas.ts) (inspection),
+[`src/ai/schemas.ts`](../src/ai/schemas.ts) (everything exchanged with the assistant) and
+[`src/db/db.ts`](../src/db/db.ts) (records on the phone).
+
+## On the phone (IndexedDB, Dexie v3)
 
 ```ts
-Inspection {
-  schemaVersion: 1; id; createdAt; updatedAt; status: 'open' | 'afgesloten'
-  klant; plaatsVanOnderzoek; datum /* yyyy-mm-dd */; verslagnummer /* bepo.JJ.XXXX */
-  waterwingebied: boolean | null              // T2
-  tank: Tank                                  // T2/T3
-  product: Product                            // T4
-  vorigeKeuring: PreviousInspection           // "wat was het vorige keer?"
-  items: Record<itemId, CheckItemState>       // T2–T19
-  findings: Finding[]                         // T20 (M6)
+Inspection {               // one inspection = one tank = one OneDrive folder
+  schemaVersion: 2; id; createdAt; updatedAt; status
+  klant; plaatsVanOnderzoek; datum; verslagnummer; omschrijving /* "Tank 3 — mazout" */
+  vorigVerslag: { fileName; text; importedAt; status; facts: PreviousReportFacts | null; error } | null
+  vorigeKeuring: { datum; verslagnummer; lekdetectieType; overvulsysteemType; stickerkleur;
+                   openOpmerkingen: { id; text; checked }[]; notities }   // filled from facts
+  tank; product           // filled from facts where empty; used by the rule hints
+  verborgenHints: string[]  // dismissed hint rule ids
+  items; findings; waterwingebied   // kept for the rules engine; no checklist UI
 }
 
-Tank { material: 'staal'|'rvs'|'gvk'|'thermoplast'|'ander'|null; materialOther
-       wall: 'enkelwandig'|'dubbelwandig'|null; placement: 'bovengronds'|'ondergronds'
-       inhoudLiter; bouwjaar; fabricagenr; tankbouwer; internTanknr; prototypekeurnr; norm
-       levensduurJaar; afmetingen; ontwerpdruk; ontwerptemp; ontwerpdichtheid
-       deelVanTankenpark: boolean }
+Tag { tagStatus: 'wachtend' | 'klaar' | 'handmatig' | 'mislukt'; sectie: 'T2'…'T20' | null; omschrijving }
 
-Product { naam; vlampuntC; dichtheid; dampdrukKpa; ghs: GHS01…GHS09[]
-          atexZone: boolean | null; msdsBron }
+PhotoRecord     extends Tag { id; inspectionId; fileName /* T10_inkuiping_01.jpg | FOTO_01.jpg */;
+                              blob; width; height; takenAt; createdAt }
+VoiceNoteRecord extends Tag { id; inspectionId; label /* VN_01 */; blob; mimeType; durationMs;
+                              recordedAt; transcription { status; text; provider; updatedAt } }
+TextNoteRecord  extends Tag { id; inspectionId; text; createdAt }
 
-PreviousInspection { datum; verslagnummer; lekdetectieType; overvulsysteemType
-                     stickerkleur: 'groen'|'oranje'|'rood'|null
-                     openOpmerkingen: { id; text; checked }[]; notities }
+QuestionRecord { id; inspectionId; vraag; photoIds; status: 'wachtend'|'bezig'|'klaar'|'mislukt';
+                 answer: Answer | null; error; createdAt; answeredAt;
+                 feedback: { verdict: 'klopt' | 'fout'; correctie; at } | null }
 
-CheckItemState { itemId; status: 'OK'|'NOK'|'NVT'|'NIET_GECONTROLEERD'
-                 beschrijving; values: Record<string,string>; teBevestigen; updatedAt }
+LessonRecord { id; vraag; fout_antwoord; correctie; status: 'voorgesteld'|'goedgekeurd'|'afgewezen';
+               photoIds; answer /* original inputs */; createdAt; decidedAt; inspectionId; questionId }
 
-AiSuggestion { id; inspectionId; itemId; origin: 'rule'|'voice'|'photo'; originRef
-               proposal { status?; beschrijving?; values?; finding? }
-               reason; article; source; confidence: 'hoog'|'middel'|'laag'
-               decision: 'open'|'aanvaard'|'aangepast'|'verworpen'; createdAt; decidedAt }
-
-Finding { id; severity: 'tekortkoming'|'opmerking'|'informatie'; text
-          itemIds: string[]; ruleId; standardSentenceId }
+SettingsRecord { serverUrl; appToken; oneDriveClientId; oneDriveFolder; uploadAudio }
+SyncRecord     { path; inspectionId; hash; uploadedAt }   // what is already on OneDrive
 ```
 
-Binary data (IndexedDB only, referenced by `inspectionId` + `itemId`, `null` = unsorted):
+## Exchanged with the assistant
 
 ```ts
-PhotoRecord     { id; inspectionId; itemId; fileName /* T10_dichtheid_01.jpg */
-                  blob; width; height; takenAt; createdAt }
-VoiceNoteRecord { id; inspectionId; itemId; label /* VN_01 */; blob; mimeType; durationMs
-                  recordedAt; transcription { status; text; provider; updatedAt } }
+Answer { antwoord; zekerheid: 'hoog'|'middel'|'laag'; te_bevestigen;
+         bronnen: { bron: 'vlarem'|'vorig_verslag'|'regel'|'standaardzin'|'foto'|'notitie'|'les';
+                    referentie; citaat }[];
+         sectie; voorstel_tekst: { soort; tekst } | null; nakijken: string[] }
+
+PreviousReportFacts { samenvatting; verslagnummer; datum; klever; tank {…}; product {…};
+                      lekdetectie; overvulsysteem; peilmeter;
+                      aandachtspunten: { tekst; soort; sectie; tegen_volgende_keuring }[] }
+
+TagResult { sectie; omschrijving; zekerheid }
 ```
 
-`null` always means _unknown_, which is different from "nee"/`false`. NVT suggestions and
-rules never fire on unknown values.
+`null` always means _unknown_. The assistant must use `null` rather than guess.
 
-## T-section mapping
+## On OneDrive (per inspection)
 
-Item ids are `<section>.<slug>` and are stable. Full definitions:
-[`src/checklist/bepo-bovengronds.ts`](../src/checklist/bepo-bovengronds.ts).
+```
+KeurKompas/<JJJJMMDD>_<klant>_<tanknr>/
+  photos/T10_inkuiping_01.jpg …   notes.md (grouped per T-section, kept answers)
+  transcripts/VN_01.txt …         inspection.json (structured, schemaVersion)
+  audio/VN_01.m4a … (optional)
+KeurKompas/_lessen/lessen.json    approved lessons
+```
 
-| Code | Section                            | Items                                                                                                                   | Data in                                    |
-| ---- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| T2   | Algemene gegevens                  | ligging, tankenpark                                                                                                     | `waterwingebied`, `tank.deelVanTankenpark` |
-| T3   | Houdergegevens                     | kenplaat, prototypekeur, levensduur                                                                                     | `tank.*`                                   |
-| T4   | Productgegevens                    | product, vib                                                                                                            | `product.*`                                |
-| T5   | Inzage documenten                  | vorig_rapport, indienststelling, omgevingsvergunning, bijzondere_voorwaarden, conformiteitsattest                       | items                                      |
-| T6   | Visuele controle                   | verontreiniging, buitenwand, fundering, statische_dichtheid, toebehoren, beveiliging, inspectieopening, doorvoer, brand | items                                      |
-| T7   | Leidingwerk                        | materiaal, antihevel, bovengronds, ondergronds                                                                          | items                                      |
-| T8   | Lekdetectie tank                   | systeem (bestaand/nieuw, type, merk, serienr), signaal, atex, kenplaat                                                  | items                                      |
-| T9   | Lekdetectie dubbelwandige doorvoer | systeem, signaal, atex, kenplaat                                                                                        | items                                      |
-| T10  | Inkuiping                          | uitvoering, capaciteit, afstand, dichtheid, verontreiniging                                                             | items                                      |
-| T11  | Systeem tegen overvulling          | systeem (bestaand/nieuw, soort, type, merk, serienr), werking, atex, kenplaat                                           | items                                      |
-| T12  | Peilmeter                          | peilmeter, afzonderlijk, atex                                                                                           | items                                      |
-| T13  | Aarding                            | aarding                                                                                                                 | items                                      |
-| T14  | Overloop                           | overloop                                                                                                                | items                                      |
-| T15  | Vulpunt                            | uitvoering, opvang                                                                                                      | items                                      |
-| T16  | Ontluchting                        | uitvoering, emissiebeperking, dampretour                                                                                | items                                      |
-| T17  | Vloeistofdichte zones              | standplaats_tankwagen, verdeelzone, kws_afscheider, ander_opvangsysteem                                                 | items                                      |
-| T18  | Identificatie                      | vulpunt, tank, pictogrammen                                                                                             | items                                      |
-| T19  | Tankenpark                         | peilputten, blussen_koelen, toegankelijkheid, dossier                                                                   | items                                      |
-| T20  | Resultaat                          | —                                                                                                                       | `findings` + sticker proposal (M6)         |
+## BEPO sections
 
-### NVT proposals
-
-NVT proposals come from rules with `"suggest_status": "NVT"` in `knowledge/rules` (see
-[`rules.md`](rules.md)). They are shown on unchecked items only; the inspector accepts with one
-tap.
-
-### Explicit fields used by rules (M2)
-
-| Item                                | Field                   | Options                                                         |
-| ----------------------------------- | ----------------------- | --------------------------------------------------------------- |
-| T5.omgevingsvergunning              | `situatie`              | voorgelegd / niet voorgelegd / verlopen                         |
-| T6.doorvoer                         | `onder_vloeistofniveau` | JA / NEEN                                                       |
-| T8.systeem, T9.systeem, T11.systeem | `aanwezig`              | JA / NEEN                                                       |
-| T8.signaal, T9.signaal              | `signalen`              | akoestisch én visueel / enkel akoestisch / enkel visueel / geen |
-
-Rule reviews are stored on the device in the `ruleReviews` table (Dexie v2):
-`{ ruleId, ruleHash, verdict: 'akkoord' | 'niet_akkoord', comment, reviewedAt }`. A review only
-counts while the rule content (hash) is unchanged.
+Item ids (`T10.dichtheid`, …) in [`src/checklist/bepo-bovengronds.ts`](../src/checklist/bepo-bovengronds.ts)
+remain the vocabulary for rules and sorting. They are not shown as a checklist.

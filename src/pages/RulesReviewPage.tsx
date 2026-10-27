@@ -167,7 +167,7 @@ export function RulesReviewPage() {
     <Layout
       title="Regels nakijken"
       subtitle={`${RULES.length} regels · ${open} nog na te kijken`}
-      back="/"
+      back="/instellingen"
     >
       <p className="mb-3 text-gray-700">
         Controleer elke regel: klopt de voorwaarde, de tekst en het artikel? Regels die nog niet
