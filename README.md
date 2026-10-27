@@ -3,9 +3,11 @@
 _Je kompas op het terrein._ An offline-first field app (PWA) for inspecting storage tanks under
 VLAREM II, hoofdstuk 5.17, structured as the BEPO report (T2–T20).
 
-**Status:** M0 (foundation) and M1 (offline capture) are built: inspections, tank/product
-data, previous-inspection facts, the T2–T19 checklist with OK/NOK/NVT, photos and hold-to-record
-voice notes, all stored offline on the device.
+**Status:** M0 (foundation), M1 (offline capture) and M2 (rules engine + vergeet-niet) are
+built: inspections, tank/product data, previous-inspection facts, the T2–T19 checklist with
+OK/NOK/NVT, photos and hold-to-record voice notes, all offline on the device; plus 28 VLAREM
+rules from `knowledge/rules` that propose NVT, reminders and findings, a rule review screen, and
+a vergeet-niet list that blocks closing an inspection while something is missing.
 
 ## Try it
 

@@ -1,0 +1,4 @@
+{
+  "$comment": "Independence rule: these names may NEVER appear in proposed findings or rule texts. Case-insensitive, whole words. Starter list — please complete with the brands you encounter (tanks, leak detection, overfill systems, gauges, separators, suppliers).",
+  "brands": ["Afriso", "Dehoust", "Roth", "Schütz", "Sotralentz", "Werit", "Haase", "Tecalemit"]
+}

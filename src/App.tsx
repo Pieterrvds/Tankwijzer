@@ -6,6 +6,8 @@ import { GegevensPage } from './pages/GegevensPage';
 import { VorigeKeuringPage } from './pages/VorigeKeuringPage';
 import { PhotoTrayPage } from './pages/PhotoTrayPage';
 import { UpdatePrompt } from './components/UpdatePrompt';
+import { VergeetNietPage } from './pages/VergeetNietPage';
+import { RulesReviewPage } from './pages/RulesReviewPage';
 
 export function App() {
   return (
@@ -17,6 +19,8 @@ export function App() {
         <Route path="/inspectie/:id/vorige" element={<VorigeKeuringPage />} />
         <Route path="/inspectie/:id/fotos" element={<PhotoTrayPage />} />
         <Route path="/inspectie/:id/sectie/:code" element={<SectionPage />} />
+        <Route path="/inspectie/:id/vergeet-niet" element={<VergeetNietPage />} />
+        <Route path="/regels" element={<RulesReviewPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <UpdatePrompt />

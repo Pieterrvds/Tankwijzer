@@ -10,6 +10,8 @@ import { repo } from '../db/repository';
 import { tankLabel } from '../domain/factories';
 import type { Inspection } from '../domain/schemas';
 import { formatDate } from '../lib/format';
+import { buildVergeetNiet, closeCheck, type VergeetNiet } from '../rules/vergeet-niet';
+import { useMemo } from 'react';
 import { InspectionNotFound, Loading } from './NotFound';
 import { useInspection } from './useInspection';
 
@@ -21,6 +23,43 @@ function NavTile({ to, title, detail }: { to: string; title: string; detail: str
     >
       <span className="font-bold">{title}</span>
       <span className="truncate text-sm text-gray-700">{detail}</span>
+    </Link>
+  );
+}
+
+/** Summary of what is still open; tapping opens the full vergeet-niet page. */
+function VergeetNietTile({ to, v, closed }: { to: string; v: VergeetNiet; closed: boolean }) {
+  const check = closeCheck(v);
+  const parts = [
+    v.vorigeOpmerkingen.length && `${v.vorigeOpmerkingen.length} vorige opmerking(en)`,
+    v.herinneringen.length && `${v.herinneringen.length} herinnering(en)`,
+    v.bevindingen.length && `${v.bevindingen.length} voorgestelde bevinding(en)`,
+    v.nvtVoorstellen.length && `${v.nvtVoorstellen.length} NVT-voorstel(len)`,
+  ].filter(Boolean);
+  return (
+    <Link
+      to={to}
+      className={`mt-4 block rounded-2xl border-2 p-4 active:bg-gray-50 ${
+        closed
+          ? 'border-ok bg-green-50'
+          : check.canClose
+            ? 'border-ok'
+            : 'border-amber-500 bg-amber-50'
+      }`}
+    >
+      <span className="flex items-center justify-between text-lg font-bold">
+        <span>{closed ? '✓ Afgesloten' : 'Vergeet niet'}</span>
+        <span aria-hidden>›</span>
+      </span>
+      <span className="block text-gray-800">
+        {closed
+          ? 'Tik om te heropenen of na te kijken.'
+          : parts.length
+            ? parts.join(' · ')
+            : check.canClose
+              ? 'Alles gecontroleerd — klaar om af te sluiten.'
+              : 'Nog items te controleren.'}
+      </span>
     </Link>
   );
 }
@@ -89,6 +128,11 @@ export function InspectionPage() {
     [id],
   );
 
+  const vergeetNiet = useMemo(
+    () => (inspection ? buildVergeetNiet(inspection) : null),
+    [inspection],
+  );
+
   if (inspection === undefined) return <Loading />;
   if (inspection === null) return <InspectionNotFound />;
 
@@ -127,6 +171,14 @@ export function InspectionPage() {
       )}
 
       <VorigeKeuringPanel inspection={inspection} />
+
+      {vergeetNiet && (
+        <VergeetNietTile
+          to={`${base}/vergeet-niet`}
+          v={vergeetNiet}
+          closed={inspection.status === 'afgesloten'}
+        />
+      )}
 
       <SectionHeading>Gegevens</SectionHeading>
       <div className="grid grid-cols-2 gap-2">

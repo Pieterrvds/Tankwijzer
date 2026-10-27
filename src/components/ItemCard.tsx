@@ -4,6 +4,9 @@ import { statusOf } from '../checklist';
 import { repo } from '../db/repository';
 import type { Inspection, ItemStatus } from '../domain/schemas';
 import { useAutosave } from '../lib/hooks';
+import { findingsFor, nvtSuggestionsFor, type RuleResult } from '../rules/engine';
+import { useReviewStateOf } from '../rules/useRules';
+import { RuleNotice } from './RuleNotice';
 import { PhotoCaptureButton } from './PhotoCapture';
 import { PhotoStrip } from './PhotoStrip';
 import { ChoiceField } from './ui';
@@ -53,10 +56,21 @@ function StatusButtons({
   );
 }
 
-export function ItemCard({ inspection, item }: { inspection: Inspection; item: ItemDefinition }) {
+export function ItemCard({
+  inspection,
+  item,
+  ruleResults,
+}: {
+  inspection: Inspection;
+  item: ItemDefinition;
+  /** Results of the rules engine for this inspection (computed once per page). */
+  ruleResults: RuleResult[];
+}) {
   const state = inspection.items[item.id];
   const status = statusOf(inspection, item.id);
-  const nvtReason = status === 'NIET_GECONTROLEERD' ? item.suggestNvt?.(inspection) : null;
+  const reviewOf = useReviewStateOf();
+  const nvtProposals = nvtSuggestionsFor(inspection, ruleResults, item.id);
+  const notices = findingsFor(ruleResults, item.id);
 
   // Text is edited locally and autosaved, so typing never waits for IndexedDB.
   const [beschrijving, setBeschrijving] = useState(state?.beschrijving ?? '');
@@ -70,25 +84,24 @@ export function ItemCard({ inspection, item }: { inspection: Inspection; item: I
   return (
     <article
       id={item.id}
-      className={`mb-4 rounded-2xl border-l-8 border-2 bg-white p-4 ${CARD_BORDER[status]}`}
+      className={`mb-4 scroll-mt-20 rounded-2xl border-2 border-l-8 bg-white p-4 ${CARD_BORDER[status]}`}
     >
       <header className="mb-3">
         <h3 className="text-lg leading-snug font-bold">{item.label}</h3>
         {item.hint && <p className="text-base text-gray-700">{item.hint}</p>}
       </header>
 
-      {nvtReason && (
-        <div className="mb-3 rounded-xl border-2 border-dashed border-nvt bg-gray-50 p-3">
-          <p className="text-sm">
-            <span className="font-semibold">Voorstel: NVT.</span> {nvtReason}
-          </p>
-          <button
-            type="button"
-            onClick={() => void repo.updateItem(inspection.id, item.id, { status: 'NVT' })}
-            className="mt-2 min-h-12 rounded-lg border-2 border-nvt px-4 font-semibold"
-          >
-            NVT overnemen
-          </button>
+      {nvtProposals.length > 0 && (
+        <div className="mb-3">
+          <RuleNotice result={nvtProposals[0]!} review={reviewOf(nvtProposals[0]!)}>
+            <button
+              type="button"
+              onClick={() => void repo.updateItem(inspection.id, item.id, { status: 'NVT' })}
+              className="mt-2 min-h-12 rounded-lg border-2 border-nvt bg-white px-4 font-semibold"
+            >
+              NVT overnemen
+            </button>
+          </RuleNotice>
         </div>
       )}
 
@@ -102,6 +115,13 @@ export function ItemCard({ inspection, item }: { inspection: Inspection; item: I
         <VoiceRecordButton inspectionId={inspection.id} itemId={item.id} />
       </div>
       <PhotoStrip inspection={inspection} itemId={item.id} />
+      {notices.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {notices.map((r) => (
+            <RuleNotice key={r.rule.id} result={r} review={reviewOf(r)} />
+          ))}
+        </div>
+      )}
       <VoiceNoteList inspection={inspection} itemId={item.id} />
 
       {!expanded && (beschrijving || Object.values(values).some(Boolean) || teBevestigen) && (

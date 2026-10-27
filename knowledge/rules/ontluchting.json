@@ -1,0 +1,42 @@
+{
+  "$comment": "Seed rules. verified_by_user stays false until the inspector confirms the rule in the app (Regels nakijken). Trigger language: knowledge/rules/README.md.",
+  "rules": [
+    {
+      "id": "ontluchting.emissiebeperking",
+      "title_nl": "Emissiebeperkende maatregelen controleren",
+      "section": "T16",
+      "trigger": {
+        "fact": "derived.emissiebeperkingVereist",
+        "op": "eq",
+        "value": true
+      },
+      "severity": "herinnering",
+      "article": "te bevestigen",
+      "text_nl": "GHS06 of dampdruk ≥ 13,3 kPa: controleer de emissiebeperkende maatregelen.",
+      "items": ["T16.emissiebeperking"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false
+    },
+    {
+      "id": "ontluchting.emissiebeperking_nvt",
+      "title_nl": "Emissiebeperking NVT zonder GHS06 en bij lage dampdruk",
+      "section": "T16",
+      "trigger": {
+        "fact": "derived.emissiebeperkingVereist",
+        "op": "eq",
+        "value": false
+      },
+      "severity": "herinnering",
+      "article": "te bevestigen",
+      "text_nl": "Geen GHS06 en dampdruk < 13,3 kPa: emissiebeperkende maatregelen zijn NVT.",
+      "items": ["T16.emissiebeperking"],
+      "suggest_status": "NVT",
+      "valid_from": null,
+      "valid_until": null,
+      "source": "KeurKompas — afgeleid uit de checklist (M1)",
+      "verified_by_user": false
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "$comment": "Seed rules. verified_by_user stays false until the inspector confirms the rule in the app (Regels nakijken). Trigger language: knowledge/rules/README.md.",
+  "rules": [
+    {
+      "id": "inkuiping.enkelwandig",
+      "title_nl": "Enkelwandige houder: inkuiping voor de grootste houder",
+      "section": "T10",
+      "trigger": {
+        "fact": "tank.wall",
+        "op": "eq",
+        "value": "enkelwandig"
+      },
+      "severity": "herinnering",
+      "article": "te bevestigen",
+      "text_nl": "Enkelwandige houder: de inkuiping moet de inhoud van de grootste houder kunnen bevatten.",
+      "items": ["T10.capaciteit"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false
+    },
+    {
+      "id": "inkuiping.capaciteit_kleiner_dan_inhoud",
+      "title_nl": "Opvangcapaciteit kleiner dan inhoud houder",
+      "section": "T10",
+      "trigger": {
+        "fact": "item:T10.capaciteit.values.capaciteit_l",
+        "op": "lt",
+        "valueFact": "tank.inhoudLiter"
+      },
+      "severity": "herinnering",
+      "article": "te bevestigen",
+      "text_nl": "De opgegeven opvangcapaciteit is kleiner dan de inhoud van deze houder. Controleer de opvangcapaciteit.",
+      "items": ["T10.capaciteit"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "KeurKompas — afgeleid uit de checklist (M1)",
+      "verified_by_user": false
+    },
+    {
+      "id": "vulpunt.geen_vaste_voorziening",
+      "title_nl": "Geen vaste vloeistofdichte voorziening aan vulpunt of verdeelzone",
+      "section": "T15",
+      "trigger": {
+        "any": [
+          {
+            "fact": "item:T15.opvang.status",
+            "op": "eq",
+            "value": "NOK"
+          },
+          {
+            "fact": "item:T17.verdeelzone.status",
+            "op": "eq",
+            "value": "NOK"
+          }
+        ]
+      },
+      "severity": "opmerking",
+      "article": "te bevestigen",
+      "text_nl": "Er is geen vaste vloeistofdichte voorziening aanwezig. Een lekbak en absorberend granulaat dienen voorzien te worden.",
+      "items": ["T15.opvang", "T17.verdeelzone"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false,
+      "note": "Tekst is een voorstel van KeurKompas."
+    }
+  ]
+}

@@ -6,8 +6,25 @@
  * Section codes and order MUST match the report so the export maps 1:1.
  * Item ids are stored in the database: add new items freely, but never rename an id.
  */
-import { nietOntvlambaarReden, vereistEmissiebeperking } from './conditions';
 import type { Checklist, ItemDefinition, ItemField, SectionDefinition } from './types';
+
+const JA_NEEN = ['JA', 'NEEN'];
+
+/** "Is the system there at all?" — rules for a missing system depend on this explicit answer. */
+const AANWEZIG: ItemField = {
+  key: 'aanwezig',
+  label: 'Aanwezig',
+  kind: 'choice',
+  options: JA_NEEN,
+};
+
+/** Which signals work. Option texts are referenced by rules: change them together. */
+const SIGNALEN: ItemField = {
+  key: 'signalen',
+  label: 'Werkende signalen',
+  kind: 'choice',
+  options: ['akoestisch én visueel', 'enkel akoestisch', 'enkel visueel', 'geen'],
+};
 
 const BESTAAND_NIEUW: ItemField = {
   key: 'bouwperiode',
@@ -15,9 +32,6 @@ const BESTAAND_NIEUW: ItemField = {
   kind: 'choice',
   options: ['bestaand (vóór 01/01/2025)', 'nieuw (vanaf 01/01/2025)'],
 };
-
-const enkelwandigReden: ItemDefinition['suggestNvt'] = (i) =>
-  i.tank.wall === 'enkelwandig' ? 'Enkelwandige houder: geen dubbelwandige doorvoer.' : null;
 
 /** Helper so every item automatically gets its section and a full id. */
 function section(
@@ -98,6 +112,12 @@ export const BEPO_BOVENGRONDS: Checklist = {
           slug: 'omgevingsvergunning',
           label: 'Omgevingsvergunning',
           fields: [
+            {
+              key: 'situatie',
+              label: 'Situatie',
+              kind: 'choice',
+              options: ['voorgelegd', 'niet voorgelegd', 'verlopen'],
+            },
             { key: 'referentie', label: 'Referentie / datum', kind: 'text' },
             { key: 'geldig_tot', label: 'Geldig tot', kind: 'text' },
           ],
@@ -132,7 +152,14 @@ export const BEPO_BOVENGRONDS: Checklist = {
         {
           slug: 'doorvoer',
           label: 'Dubbelwandige doorvoer',
-          suggestNvt: enkelwandigReden,
+          fields: [
+            {
+              key: 'onder_vloeistofniveau',
+              label: 'Doorvoeren onder vloeistofniveau door dubbele wand',
+              kind: 'choice',
+              options: JA_NEEN,
+            },
+          ],
         },
         { slug: 'brand', label: 'Maatregelen bij brand' },
       ],
@@ -171,14 +198,15 @@ export const BEPO_BOVENGRONDS: Checklist = {
           label: 'Lekdetectiesysteem',
           hint: 'Type (bv. kijkglas, vlotter, vacuüm, …), merk, serienummer.',
           fields: [
+            AANWEZIG,
             BESTAAND_NIEUW,
             { key: 'type', label: 'Type', kind: 'text' },
             { key: 'merk', label: 'Merk', kind: 'text' },
             { key: 'serienr', label: 'Serienummer', kind: 'text' },
           ],
         },
-        { slug: 'signaal', label: 'Akoestisch én visueel signaal werkend' },
-        { slug: 'atex', label: 'ATEX', suggestNvt: nietOntvlambaarReden },
+        { slug: 'signaal', label: 'Akoestisch én visueel signaal werkend', fields: [SIGNALEN] },
+        { slug: 'atex', label: 'ATEX' },
         {
           slug: 'kenplaat',
           label: 'Prototypekeurnummer + kenplaat',
@@ -195,8 +223,8 @@ export const BEPO_BOVENGRONDS: Checklist = {
         {
           slug: 'systeem',
           label: 'Lekdetectiesysteem doorvoer',
-          suggestNvt: enkelwandigReden,
           fields: [
+            AANWEZIG,
             BESTAAND_NIEUW,
             { key: 'type', label: 'Type', kind: 'text' },
             { key: 'merk', label: 'Merk', kind: 'text' },
@@ -206,17 +234,15 @@ export const BEPO_BOVENGRONDS: Checklist = {
         {
           slug: 'signaal',
           label: 'Akoestisch én visueel signaal werkend',
-          suggestNvt: enkelwandigReden,
+          fields: [SIGNALEN],
         },
         {
           slug: 'atex',
           label: 'ATEX',
-          suggestNvt: (i) => enkelwandigReden(i) ?? nietOntvlambaarReden(i),
         },
         {
           slug: 'kenplaat',
           label: 'Prototypekeurnummer + kenplaat',
-          suggestNvt: enkelwandigReden,
           fields: [{ key: 'prototypekeurnr', label: 'Prototypekeurnr.', kind: 'text' }],
         },
       ],
@@ -261,6 +287,7 @@ export const BEPO_BOVENGRONDS: Checklist = {
           label: 'Systeem tegen overvulling',
           hint: 'Waarschuwing ≤ 95 % (akoestisch ≥ 70 dB, hoorbaar aan vulpunt) of beveiliging ≤ 98 % (automatische afsluiting).',
           fields: [
+            AANWEZIG,
             BESTAAND_NIEUW,
             {
               key: 'soort',
@@ -274,7 +301,7 @@ export const BEPO_BOVENGRONDS: Checklist = {
           ],
         },
         { slug: 'werking', label: 'Werking getest' },
-        { slug: 'atex', label: 'ATEX', suggestNvt: nietOntvlambaarReden },
+        { slug: 'atex', label: 'ATEX' },
         {
           slug: 'kenplaat',
           label: 'Prototypekeurnummer + kenplaat',
@@ -297,14 +324,14 @@ export const BEPO_BOVENGRONDS: Checklist = {
           label: 'Afzonderlijk van systeem tegen overvulling',
           hint: 'Teller van pomp/verdeelzuil is niet toegelaten.',
         },
-        { slug: 'atex', label: 'ATEX', suggestNvt: nietOntvlambaarReden },
+        { slug: 'atex', label: 'ATEX' },
       ],
     }),
     section({
       code: 'T13',
       title: 'Aarding',
       intro: 'Enkel relevant bij vlampunt < 55 °C of ATEX-zone, anders NVT.',
-      items: [{ slug: 'aarding', label: 'Aarding', suggestNvt: nietOntvlambaarReden }],
+      items: [{ slug: 'aarding', label: 'Aarding' }],
     }),
     section({
       code: 'T14',
@@ -341,8 +368,6 @@ export const BEPO_BOVENGRONDS: Checklist = {
           slug: 'emissiebeperking',
           label: 'Emissiebeperkende maatregelen',
           hint: 'Vereist bij GHS06 of dampdruk ≥ 13,3 kPa.',
-          suggestNvt: (i) =>
-            vereistEmissiebeperking(i) === false ? 'Geen GHS06 en dampdruk < 13,3 kPa.' : null,
         },
         { slug: 'dampretour', label: 'Dampretour' },
       ],
@@ -379,7 +404,6 @@ export const BEPO_BOVENGRONDS: Checklist = {
           slug: 'pictogrammen',
           label: 'Pictogrammen verbod op vuur / roken',
           hint: 'Enkel voor ontvlambare producten.',
-          suggestNvt: nietOntvlambaarReden,
         },
       ],
     }),
@@ -391,10 +415,7 @@ export const BEPO_BOVENGRONDS: Checklist = {
         { slug: 'blussen_koelen', label: 'Blus- en koelmiddelen (groep 1)' },
         { slug: 'toegankelijkheid', label: 'Toegankelijkheid' },
         { slug: 'dossier', label: 'Dossier tankenpark' },
-      ].map((item) => ({
-        ...item,
-        suggestNvt: (i) => (i.tank.deelVanTankenpark ? null : 'Geen deel van een tankenpark.'),
-      })),
+      ],
     }),
   ],
 };

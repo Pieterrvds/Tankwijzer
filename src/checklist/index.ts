@@ -42,18 +42,6 @@ export function checklistProgress(inspection: Inspection): Progress {
   );
 }
 
-/** Items in this section that are unchecked and for which an NVT suggestion exists. */
-export function openNvtSuggestions(
-  inspection: Inspection,
-  section: SectionDefinition,
-): { item: ItemDefinition; reason: string }[] {
-  return section.items.flatMap((item) => {
-    if (statusOf(inspection, item.id) !== 'NIET_GECONTROLEERD') return [];
-    const reason = item.suggestNvt?.(inspection);
-    return reason ? [{ item, reason }] : [];
-  });
-}
-
 /** Zero-padded section code for file names: T6 → "T06". */
 export function paddedSection(code: string): string {
   return code.replace(/^T(\d)$/, 'T0$1');

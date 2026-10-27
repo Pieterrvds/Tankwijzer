@@ -1,4 +1,4 @@
-import type { Inspection, SectionCode } from '../domain/schemas';
+import type { SectionCode } from '../domain/schemas';
 
 /** An extra structured value captured on a check item (serial number, type, …). */
 export interface ItemField {
@@ -21,11 +21,6 @@ export interface ItemDefinition {
   /** What to look at on site. */
   hint?: string;
   fields?: ItemField[];
-  /**
-   * Returns a reason when this item is very likely NVT for this tank, or null.
-   * This is only a *suggestion*: the inspector confirms it with one tap.
-   */
-  suggestNvt?: (inspection: Inspection) => string | null;
 }
 
 export interface SectionDefinition {

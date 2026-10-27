@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { checklistFor, openNvtSuggestions } from '../checklist';
+import { Link, useLocation, useParams } from 'react-router-dom';
+import { checklistFor } from '../checklist';
+import { nvtSuggestionsFor } from '../rules/engine';
+import { useRuleResults } from '../rules/useRules';
 import { ItemCard } from '../components/ItemCard';
 import { Layout } from '../components/Layout';
 import { Card } from '../components/ui';
@@ -21,7 +23,16 @@ function previousHint(inspection: Inspection, code: string): string | null {
 export function SectionPage() {
   const { code = '' } = useParams();
   const { id, inspection } = useInspection();
-  useEffect(() => window.scrollTo(0, 0), [code]);
+  const ruleResults = useRuleResults(inspection);
+  const { hash } = useLocation();
+  const loaded = !!inspection;
+  // Jump to a specific item (#T10.dichtheid, from the vergeet-niet list) or to the top.
+  useEffect(() => {
+    if (!loaded) return;
+    const target = hash ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
+    if (target) target.scrollIntoView({ block: 'start' });
+    else window.scrollTo(0, 0);
+  }, [code, hash, loaded]);
   if (inspection === undefined) return <Loading />;
   if (inspection === null) return <InspectionNotFound />;
 
@@ -33,7 +44,9 @@ export function SectionPage() {
   const prev = sections[index - 1];
   const next = sections[index + 1];
   const base = `/inspectie/${id}`;
-  const suggestions = openNvtSuggestions(inspection, section);
+  const suggestions = section.items.filter(
+    (item) => nvtSuggestionsFor(inspection, ruleResults, item.id).length > 0,
+  );
   const hint = previousHint(inspection, section.code);
 
   return (
@@ -95,7 +108,7 @@ export function SectionPage() {
             className="min-h-12 rounded-lg border-2 border-nvt px-4 font-semibold"
             onClick={() =>
               void repo.updateInspection(id, (draft) => {
-                for (const { item } of suggestions) {
+                for (const item of suggestions) {
                   const cur = draft.items[item.id];
                   draft.items[item.id] = {
                     itemId: item.id,
@@ -115,7 +128,7 @@ export function SectionPage() {
       )}
 
       {section.items.map((item) => (
-        <ItemCard key={item.id} inspection={inspection} item={item} />
+        <ItemCard key={item.id} inspection={inspection} item={item} ruleResults={ruleResults} />
       ))}
     </Layout>
   );

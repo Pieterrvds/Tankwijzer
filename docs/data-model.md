@@ -78,11 +78,21 @@ Item ids are `<section>.<slug>` and are stable. Full definitions:
 | T19  | Tankenpark                         | peilputten, blussen_koelen, toegankelijkheid, dossier                                                                   | items                                      |
 | T20  | Resultaat                          | —                                                                                                                       | `findings` + sticker proposal (M6)         |
 
-### NVT suggestions already in M1 (suggestion only, one tap to accept)
+### NVT proposals
 
-| Items                                                   | Suggested NVT when                   |
-| ------------------------------------------------------- | ------------------------------------ |
-| T8/T9/T11/T12 `atex`, T13 `aarding`, T18 `pictogrammen` | vlampunt ≥ 55 °C **and** ATEX = nee  |
-| T6 `doorvoer`, T9 *                                     | tank is enkelwandig                  |
-| T16 `emissiebeperking`                                  | no GHS06 **and** dampdruk < 13,3 kPa |
-| T19 *                                                   | not part of a tankenpark             |
+NVT proposals come from rules with `"suggest_status": "NVT"` in `knowledge/rules` (see
+[`rules.md`](rules.md)). They are shown on unchecked items only; the inspector accepts with one
+tap.
+
+### Explicit fields used by rules (M2)
+
+| Item                                | Field                   | Options                                                         |
+| ----------------------------------- | ----------------------- | --------------------------------------------------------------- |
+| T5.omgevingsvergunning              | `situatie`              | voorgelegd / niet voorgelegd / verlopen                         |
+| T6.doorvoer                         | `onder_vloeistofniveau` | JA / NEEN                                                       |
+| T8.systeem, T9.systeem, T11.systeem | `aanwezig`              | JA / NEEN                                                       |
+| T8.signaal, T9.signaal              | `signalen`              | akoestisch én visueel / enkel akoestisch / enkel visueel / geen |
+
+Rule reviews are stored on the device in the `ruleReviews` table (Dexie v2):
+`{ ruleId, ruleHash, verdict: 'akkoord' | 'niet_akkoord', comment, reviewedAt }`. A review only
+counts while the rule content (hash) is unchanged.

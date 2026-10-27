@@ -9,6 +9,9 @@ import { repo } from '../db/repository';
 import { tankLabel, todayIsoDate } from '../domain/factories';
 import { VERSLAGNUMMER_PATTERN } from '../domain/schemas';
 import { formatDate } from '../lib/format';
+import { RULES } from '../rules/engine';
+import { reviewState } from '../rules/review';
+import { useRuleReviews } from '../rules/useRules';
 
 function NewInspectionForm({ onCancel }: { onCancel: () => void }) {
   const navigate = useNavigate();
@@ -56,6 +59,22 @@ function NewInspectionForm({ onCancel }: { onCancel: () => void }) {
   );
 }
 
+/** Entry to "Regels nakijken", with how many rules still wait for the inspector's review. */
+function RulesTile() {
+  const reviews = useRuleReviews();
+  const open = RULES.filter((r) => reviewState(r, reviews.get(r.id)) === 'te_controleren').length;
+  if (open === 0) return null;
+  return (
+    <Link
+      to="/regels"
+      className="mb-4 flex min-h-14 items-center justify-between rounded-xl border-2 border-amber-500 bg-amber-50 px-4 font-semibold"
+    >
+      <span>Regels nakijken</span>
+      <span>{open} na te kijken ›</span>
+    </Link>
+  );
+}
+
 export function InspectionListPage() {
   const inspections = useLiveQuery(() => db.inspections.orderBy('updatedAt').reverse().toArray());
   const [creating, setCreating] = useState(false);
@@ -83,6 +102,8 @@ export function InspectionListPage() {
           </p>
         </Card>
       )}
+
+      <RulesTile />
 
       <ul className="space-y-3">
         {inspections?.map((i) => {

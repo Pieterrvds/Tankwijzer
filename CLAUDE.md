@@ -16,7 +16,8 @@ commented, and work in small, tested steps.
    Uncertain values are marked _te bevestigen_ (blue `#0070C0` on yellow, like the report).
 2. **Never invent values.** Unknown = empty/`null`. A field the AI cannot read stays empty.
 3. **Independence rule.** Never recommend or mention brands, products or suppliers in any
-   proposed text. Refer only to the VLAREM requirement. (Automated brand block: M2.)
+   proposed text. Refer only to the VLAREM requirement. `src/rules/brands.ts` blocks names from
+   `knowledge/brand-blocklist.json` in rule output; tests check all rule texts.
 4. **Offline-first.** Everything works without network; data stays on the device until export.
 5. **Law from the repo, not from model memory.** Rules and wording live in `knowledge/`.
    Standard sentences are used **verbatim**.
@@ -69,8 +70,10 @@ commented, and work in small, tested steps.
 ```
 src/
   domain/      Zod schemas (single source of truth) + factories. Shared with backend later.
-  checklist/   BEPO checklist definitions (T2–T19), NVT suggestions, file naming.
+  checklist/   BEPO checklist definitions (T2–T19), file naming.
                ondergronds.ts = PLACEHOLDER module for underground tanks (TODO).
+  rules/       Rules engine: condition language, facts, evaluation, brand check,
+               vergeet-niet + close check, rule review, docs/rules.md generator.
   db/          Dexie (IndexedDB) database + repository (all writes go through here).
   capture/     Photo compression/EXIF, audio recording helpers.
   components/  UI building blocks (ItemCard, PhotoCapture, VoiceRecorder, …).
@@ -78,7 +81,8 @@ src/
   lib/         Small utilities (number parsing, hooks).
 knowledge/
   standard-sentences.json   Verbatim standard sentences.
-  rules/                    Deterministic rules (M2).
+  rules/                    Deterministic rules (JSON) + their tests.
+  brand-blocklist.json      Names that may never appear in proposed texts.
   text/                     VLAREM II source text (added by the user).
 docs/          architecture.md, data-model.md, rules.md, examples/
 ```
@@ -92,6 +96,7 @@ npm run check        # lint + format check + typecheck + tests (run before every
 npm test             # unit tests (Vitest)
 npm run build        # production build incl. service worker
 npm run preview      # serve the production build (test offline/install here)
+npm run docs:rules   # regenerate docs/rules.md after changing knowledge/rules
 ```
 
 ## Coding conventions
@@ -101,11 +106,13 @@ npm run preview      # serve the production build (test offline/install here)
 - Never rename a checklist item id (stored data refers to it). Add new ids instead.
 - Dexie schema changes: add a new `version(n)` block; never edit an existing one.
 - Tap targets ≥ 48 px (prefer 56 px), high contrast, labels always visible.
-- Every rule in `knowledge/rules` gets unit tests. Pure functions where possible.
+- Every rule in `knowledge/rules` gets unit tests (fires + stays quiet). Pure functions where possible.
+- Rules never fire on unknown values; never guess an article (`"te bevestigen"`).
+- Choice-field option texts are referenced by rules: change both together (a test checks).
 - Bump `SCHEMA_VERSION` when `inspection.json` changes incompatibly.
 
 ## Milestones
 
-M0 Foundation ✅ · M1 Offline capture ✅ · M2 Rules engine + vergeet-niet · M3 Export v1 (ZIP)
+M0 Foundation ✅ · M1 Offline capture ✅ · M2 Rules engine + vergeet-niet ✅ · M3 Export v1 (ZIP)
 · M4 Voice AI · M5 Photo AI · M6 Draft T20 + sticker proposal · M7 Sync v2 + `keurkompas pull`.
 Finish one, demo it, wait for the user's OK, then continue.

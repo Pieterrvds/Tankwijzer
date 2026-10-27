@@ -5,6 +5,7 @@
 import { checklistFor, findItem, photoFileName } from '../checklist';
 import { emptyItemState, newId, newInspection, nowIso } from '../domain/factories';
 import { Inspection, type CheckItemState } from '../domain/schemas';
+import type { RuleReview } from '../rules/review';
 import { db as defaultDb, type KeurKompasDB, type PhotoRecord, type VoiceNoteRecord } from './db';
 
 export function createRepository(db: KeurKompasDB) {
@@ -124,8 +125,25 @@ export function createRepository(db: KeurKompasDB) {
     await db.voiceNotes.delete(id);
   }
 
+  async function setInspectionStatus(id: string, status: Inspection['status']): Promise<void> {
+    await updateInspection(id, (d) => {
+      d.status = status;
+    });
+  }
+
+  async function saveRuleReview(review: RuleReview): Promise<void> {
+    await db.ruleReviews.put(review);
+  }
+
+  async function deleteRuleReview(ruleId: string): Promise<void> {
+    await db.ruleReviews.delete(ruleId);
+  }
+
   return {
     getInspection,
+    setInspectionStatus,
+    saveRuleReview,
+    deleteRuleReview,
     createInspection,
     updateInspection,
     deleteInspection,

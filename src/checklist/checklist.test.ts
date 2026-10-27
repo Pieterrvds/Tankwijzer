@@ -2,25 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { newInspection } from '../domain/factories';
 import { SectionCode, type Inspection } from '../domain/schemas';
 import { BEPO_BOVENGRONDS } from './bepo-bovengronds';
-import { isOntvlambaarOfAtex, vereistEmissiebeperking } from './conditions';
-import {
-  checklistFor,
-  checklistProgress,
-  findItem,
-  openNvtSuggestions,
-  paddedSection,
-  photoFileName,
-} from './index';
+import { checklistFor, checklistProgress, findItem, paddedSection, photoFileName } from './index';
 import { ONDERGRONDS_PLACEHOLDER } from './ondergronds';
 
 function inspection(change: (i: Inspection) => void = () => {}): Inspection {
   const i = newInspection();
   change(i);
   return i;
-}
-
-function nvtReason(i: Inspection, itemId: string): string | null {
-  return findItem(BEPO_BOVENGRONDS, itemId)?.suggestNvt?.(i) ?? null;
 }
 
 describe('BEPO checklist structure', () => {
@@ -36,6 +24,12 @@ describe('BEPO checklist structure', () => {
       expect(item.id.startsWith(`${item.section}.`)).toBe(true);
       expect(item.slug).toMatch(/^[a-z0-9_]+$/);
     }
+  });
+
+  it('choice fields have options', () => {
+    for (const item of BEPO_BOVENGRONDS.sections.flatMap((s) => s.items))
+      for (const f of item.fields ?? [])
+        if (f.kind === 'choice') expect(f.options?.length).toBeGreaterThan(1);
   });
 
   it('every section has at least one item', () => {
@@ -59,106 +53,6 @@ describe('photo file names', () => {
     );
     expect(photoFileName(null, 3)).toBe('ONGESORTEERD_03.jpg');
     expect(paddedSection('T19')).toBe('T19');
-  });
-});
-
-describe('flammability conditions', () => {
-  it('is unknown until vlampunt or ATEX is known', () => {
-    expect(isOntvlambaarOfAtex(inspection())).toBeNull();
-  });
-
-  it('vlampunt < 55 °C → flammable', () => {
-    expect(isOntvlambaarOfAtex(inspection((i) => (i.product.vlampuntC = 21)))).toBe(true);
-  });
-
-  it('ATEX zone → flammable regardless of vlampunt', () => {
-    const i = inspection((i) => {
-      i.product.vlampuntC = 80;
-      i.product.atexZone = true;
-    });
-    expect(isOntvlambaarOfAtex(i)).toBe(true);
-  });
-
-  it('vlampunt ≥ 55 °C but ATEX unknown → still unknown', () => {
-    expect(isOntvlambaarOfAtex(inspection((i) => (i.product.vlampuntC = 60)))).toBeNull();
-  });
-
-  it('vlampunt ≥ 55 °C and no ATEX → not flammable (boundary 55 included)', () => {
-    const i = inspection((i) => {
-      i.product.vlampuntC = 55;
-      i.product.atexZone = false;
-    });
-    expect(isOntvlambaarOfAtex(i)).toBe(false);
-  });
-
-  it('emission-reducing measures for GHS06 or dampdruk ≥ 13,3 kPa', () => {
-    expect(vereistEmissiebeperking(inspection())).toBeNull();
-    expect(vereistEmissiebeperking(inspection((i) => (i.product.ghs = ['GHS06'])))).toBe(true);
-    expect(vereistEmissiebeperking(inspection((i) => (i.product.dampdrukKpa = 13.3)))).toBe(true);
-    expect(vereistEmissiebeperking(inspection((i) => (i.product.dampdrukKpa = 1)))).toBe(false);
-  });
-});
-
-describe('NVT suggestions', () => {
-  const diesel = (i: Inspection) => {
-    i.product.vlampuntC = 60;
-    i.product.atexZone = false;
-  };
-
-  it('suggests T13 aarding NVT for vlampunt ≥ 55 °C and no ATEX', () => {
-    expect(nvtReason(inspection(diesel), 'T13.aarding')).toMatch(/Vlampunt/);
-    expect(
-      nvtReason(
-        inspection((i) => (i.product.vlampuntC = 21)),
-        'T13.aarding',
-      ),
-    ).toBeNull();
-  });
-
-  it('makes no suggestion while product data is unknown', () => {
-    expect(nvtReason(inspection(), 'T13.aarding')).toBeNull();
-    expect(nvtReason(inspection(), 'T9.systeem')).toBeNull();
-    expect(nvtReason(inspection(), 'T16.emissiebeperking')).toBeNull();
-  });
-
-  it('suggests T9 NVT for single-walled tanks only', () => {
-    expect(
-      nvtReason(
-        inspection((i) => (i.tank.wall = 'enkelwandig')),
-        'T9.systeem',
-      ),
-    ).not.toBeNull();
-    expect(
-      nvtReason(
-        inspection((i) => (i.tank.wall = 'dubbelwandig')),
-        'T9.systeem',
-      ),
-    ).toBeNull();
-  });
-
-  it('suggests T19 NVT when the tank is not part of a tankenpark', () => {
-    expect(nvtReason(inspection(), 'T19.peilputten')).not.toBeNull();
-    expect(
-      nvtReason(
-        inspection((i) => (i.tank.deelVanTankenpark = true)),
-        'T19.peilputten',
-      ),
-    ).toBeNull();
-  });
-
-  it('only lists unchecked items, never overrides the inspector', () => {
-    const i = inspection(diesel);
-    const t13 = BEPO_BOVENGRONDS.sections.find((s) => s.code === 'T13')!;
-    expect(openNvtSuggestions(i, t13)).toHaveLength(1);
-    i.items['T13.aarding'] = {
-      itemId: 'T13.aarding',
-      status: 'OK',
-      beschrijving: '',
-      values: {},
-      teBevestigen: false,
-      updatedAt: i.createdAt,
-    };
-    expect(openNvtSuggestions(i, t13)).toHaveLength(0);
   });
 });
 

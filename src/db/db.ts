@@ -10,6 +10,7 @@
  */
 import Dexie, { type EntityTable } from 'dexie';
 import type { AiSuggestion, Inspection } from '../domain/schemas';
+import type { RuleReview } from '../rules/review';
 
 export interface PhotoRecord {
   id: string;
@@ -51,6 +52,7 @@ export class KeurKompasDB extends Dexie {
   photos!: EntityTable<PhotoRecord, 'id'>;
   voiceNotes!: EntityTable<VoiceNoteRecord, 'id'>;
   suggestions!: EntityTable<AiSuggestion, 'id'>;
+  ruleReviews!: EntityTable<RuleReview, 'ruleId'>;
 
   constructor(name = 'keurkompas') {
     super(name);
@@ -59,6 +61,10 @@ export class KeurKompasDB extends Dexie {
       photos: 'id, inspectionId, itemId, createdAt',
       voiceNotes: 'id, inspectionId, itemId, recordedAt',
       suggestions: 'id, inspectionId, itemId, decision',
+    });
+    // v2 (M2): the inspector's review of each rule ("Regels nakijken").
+    this.version(2).stores({
+      ruleReviews: 'ruleId',
     });
   }
 }
