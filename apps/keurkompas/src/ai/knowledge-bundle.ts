@@ -1,7 +1,7 @@
 /**
  * Renders the knowledge the assistant receives with every question: domain context, the BEPO
  * sections, standard sentences (verbatim), the rules, corrections policy and the VLAREM texts the
- * inspector added to knowledge/text. Uses Vite's import.meta.glob, so it runs at build time
+ * inspector added to the shared knowledge text (packages/vlarem-core/knowledge/text). Uses Vite's import.meta.glob, so it runs at build time
  * (vite-node / Vitest), never on the server itself.
  */
 import { BEPO_BOVENGRONDS } from '../checklist/bepo-bovengronds';
@@ -11,7 +11,7 @@ import vocabularyJson from '../../knowledge/vocabulary.json';
 import contextMd from '../../knowledge/context.md?raw';
 import lessonsMd from '../../knowledge/lessons.md?raw';
 
-const VLAREM_TEXTS = import.meta.glob<string>('../../knowledge/text/*.{md,txt}', {
+const VLAREM_TEXTS = import.meta.glob<string>('@vlarem-knowledge/text/*.{md,txt}', {
   eager: true,
   query: '?raw',
   import: 'default',

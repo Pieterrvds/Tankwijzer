@@ -1,17 +1,17 @@
 /**
- * Tests for every rule in knowledge/rules. Each rule needs at least one situation where it
+ * Tests for every inspector rule in the shared rules (packages/vlarem-core/knowledge/rules). Each rule needs at least one situation where it
  * fires and one where it must NOT fire (typically: the value is still unknown).
  * The last test fails when a rule has no test cases, so new rules cannot slip in untested.
  */
 import { describe, expect, it } from 'vitest';
-import { BEPO_BOVENGRONDS } from '../../src/checklist/bepo-bovengronds';
-import { findItem } from '../../src/checklist';
-import { emptyItemState, newInspection } from '../../src/domain/factories';
-import type { Inspection, ItemStatus } from '../../src/domain/schemas';
-import { findBrandNames } from '../../src/rules/brands';
-import { factsUsed, type Condition } from '../../src/rules/conditions';
-import { RULES, STANDARD_SENTENCES, evaluateRules } from '../../src/rules/engine';
-import { isKnownFact } from '../../src/rules/facts';
+import { BEPO_BOVENGRONDS } from '../checklist/bepo-bovengronds';
+import { findItem } from '../checklist';
+import { emptyItemState, newInspection } from '../domain/factories';
+import type { Inspection, ItemStatus } from '../domain/schemas';
+import { findBrandNames } from './brands';
+import { factsUsed, type Condition } from './conditions';
+import { RULES, STANDARD_SENTENCES, evaluateRules } from './engine';
+import { isKnownFact } from './facts';
 
 type Setup = (i: Inspection) => void;
 

@@ -115,7 +115,7 @@ describe("tank register, rules and planning", () => {
     expect(created.status).toBe(201);
 
     const detail = await api.get(`/tanks/${created.body.id}`);
-    const bund = detail.body.evaluation.obligations.find((o: any) => o.ruleId === "VL-BUND-SINGLE-WALL");
+    const bund = detail.body.evaluation.obligations.find((o: any) => o.ruleId === "inkuiping.enkelwandig");
     expect(bund.status).toBe("attention");
     expect(detail.body.evaluation.rulesetVersion).toMatch(/^VL-/);
     expect(detail.body.nextDeadline.dueDate).toBe("2027-03-15");

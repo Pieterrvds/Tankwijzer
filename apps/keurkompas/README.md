@@ -13,13 +13,19 @@ Setup (server, app, Microsoft): [`docs/SETUP.md`](docs/SETUP.md).
 
 ## Try it
 
+KeurKompas lives in the Tankwijzer monorepo (`apps/keurkompas`) and shares its VLAREM rules
+with Tankwijzer through `packages/vlarem-core`. From the repository root:
+
 ```bash
-npm install
-npm run dev -- --host
+pnpm install
+```
+
+```bash
+pnpm --filter keurkompas dev --host
 ```
 
 Open the printed network URL on your phone (same Wi-Fi). To install it on the home screen and
-test offline use, run a production build (`npm run build && npm run preview -- --host`) and
+test offline use, run a production build (`pnpm build`, then `pnpm preview --host` in this folder) and
 serve it over HTTPS (camera, microphone and installation need HTTPS outside `localhost`).
 
 See [`CLAUDE.md`](CLAUDE.md) for the principles, glossary and conventions, and

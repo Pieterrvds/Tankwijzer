@@ -7,9 +7,9 @@
 import { z } from 'zod/v4';
 
 export const SourceKind = z.enum([
-  'vlarem', // official VLAREM II text in knowledge/text
+  'vlarem', // official VLAREM II text in the shared knowledge (packages/vlarem-core/knowledge/text)
   'vorig_verslag', // the previous report of this tank
-  'regel', // a rule from knowledge/rules
+  'regel', // a rule from the shared rules (packages/vlarem-core/knowledge/rules)
   'standaardzin', // a standard sentence
   'foto', // a photo the inspector attached
   'notitie', // a voice/text note of this visit

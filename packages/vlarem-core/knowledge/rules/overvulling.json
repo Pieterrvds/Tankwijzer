@@ -1,0 +1,179 @@
+{
+  "$comment": "One rule = shared legal metadata (article, source, validity, verified_by_user) + an optional 'inspector' part (KeurKompas: BEPO section, trigger, report wording) + an optional 'owner' part (Tankwijzer: plain explanation, applies_when/ok_when). verified_by_user stays false until the inspector confirms the rule. Format: ../README.md.",
+  "rules": [
+    {
+      "id": "overvulling.alarmfluit_tot_2027",
+      "title_nl": "Alarmfluit volstaat tot 31/12/2027",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": "2027-12-31",
+      "verified_by_user": false,
+      "note": "Tekst is een voorstel van KeurKompas.",
+      "inspector": {
+        "section": "T11",
+        "trigger": {
+          "fact": "item:T11.systeem.values.type",
+          "op": "matches",
+          "value": "alarmfluit"
+        },
+        "severity": "opmerking",
+        "text_inspector_nl": "Een alarmfluit als systeem tegen overvulling volstaat slechts tot 31/12/2027.",
+        "items": [
+          "T11.systeem"
+        ]
+      },
+      "owner": {
+        "category": "transition",
+        "title_nl": "Overvulfluit: toegelaten tot 31/12/2027",
+        "text_owner_nl": "Een fluit als overvulwaarschuwing volstaat nog tot en met 31/12/2027. Daarna is een overvulbeveiliging conform bijlage 5.17.7 nodig.",
+        "why_nl": "De nieuwe regels vragen een betrouwbaardere beveiliging; de overgangsperiode geeft tijd om aan te passen.",
+        "applies_when": {
+          "fact": "overfill_alarm",
+          "op": "eq",
+          "value": "whistle"
+        },
+        "ok_when": {
+          "fact": "today",
+          "op": "lte",
+          "value": "2027-12-31"
+        },
+        "attention_nl": "De overgangstermijn voor een overvulfluit is voorbij. De regel vraagt een overvulbeveiliging conform bijlage 5.17.7.",
+        "deadline": "2027-12-31"
+      }
+    },
+    {
+      "id": "overvulling.nieuw_kenplaat",
+      "title_nl": "Nieuw systeem tegen overvulling zonder prototypekeurnummer of kenplaat",
+      "region": "VL",
+      "article": "art. 5.17.4.1.17, bijlage 5.17.7",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T11",
+        "trigger": {
+          "all": [
+            {
+              "fact": "item:T11.systeem.values.bouwperiode",
+              "op": "eq",
+              "value": "nieuw (vanaf 01/01/2025)"
+            },
+            {
+              "fact": "item:T11.kenplaat.status",
+              "op": "eq",
+              "value": "NOK"
+            }
+          ]
+        },
+        "severity": "tekortkoming",
+        "standard_sentence": "kenplaat_overvulsysteem",
+        "items": [
+          "T11.kenplaat"
+        ]
+      },
+      "owner": {
+        "category": "equipment",
+        "title_nl": "Overvulbeveiliging met prototypekeuringsnummer (vanaf 2025)",
+        "text_owner_nl": "Overvulbeveiligingen gebouwd vanaf 01/01/2025 moeten een prototypekeuringsnummer en een typeplaat hebben.",
+        "why_nl": "Zo is zeker dat het type beveiliging getest en goedgekeurd is.",
+        "applies_when": {
+          "all": [
+            {
+              "fact": "built_from_2025",
+              "op": "is_true"
+            },
+            {
+              "fact": "overfill_protection",
+              "op": "is_true"
+            }
+          ]
+        },
+        "ok_when": {
+          "fact": "overfill_prototype_approval",
+          "op": "is_true"
+        },
+        "attention_nl": "De regel vraagt een typeplaat met prototypekeuringsnummer op de overvulbeveiliging."
+      }
+    },
+    {
+      "id": "overvulling.ontbreekt",
+      "title_nl": "Geen systeem tegen overvulling",
+      "region": "VL",
+      "article": "bijlage 5.17.7",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T11",
+        "trigger": {
+          "fact": "item:T11.systeem.values.aanwezig",
+          "op": "eq",
+          "value": "NEEN"
+        },
+        "severity": "tekortkoming",
+        "standard_sentence": "overvulsysteem_ontbreekt",
+        "items": [
+          "T11.systeem"
+        ]
+      },
+      "owner": {
+        "category": "equipment",
+        "title_nl": "Overvulbeveiliging",
+        "text_owner_nl": "De tank moet een overvulbeveiliging hebben conform bijlage 5.17.7 van VLAREM II.",
+        "why_nl": "Die voorkomt dat de tank overloopt tijdens het vullen.",
+        "applies_when": {
+          "fact": "region",
+          "op": "eq",
+          "value": "VL"
+        },
+        "ok_when": {
+          "fact": "overfill_protection",
+          "op": "is_true"
+        },
+        "attention_nl": "De regel vraagt een overvulbeveiliging conform bijlage 5.17.7. Laat nakijken of de tank er een heeft."
+      }
+    },
+    {
+      "id": "peilmeting.is_overvulsysteem",
+      "title_nl": "Peilmeter is ook het systeem tegen overvulling",
+      "region": "VL",
+      "article": "omzendbrief departement Omgeving",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T12",
+        "trigger": {
+          "fact": "item:T12.afzonderlijk.status",
+          "op": "eq",
+          "value": "NOK"
+        },
+        "severity": "informatie",
+        "standard_sentence": "peilmeting_is_overvulsysteem",
+        "items": [
+          "T12.afzonderlijk"
+        ]
+      },
+      "owner": {
+        "category": "equipment",
+        "title_nl": "Peilmeter en overvulbeveiliging apart",
+        "text_owner_nl": "De peilmeter (niveaumeting) en de overvulbeveiliging moeten twee aparte systemen zijn.",
+        "why_nl": "Als de peilmeter faalt, moet de overvulbeveiliging nog altijd werken.",
+        "applies_when": {
+          "fact": "overfill_protection",
+          "op": "is_true"
+        },
+        "ok_when": {
+          "fact": "level_gauge_separate",
+          "op": "is_true"
+        },
+        "attention_nl": "De regel vraagt dat peilmeter en overvulbeveiliging twee aparte systemen zijn."
+      }
+    }
+  ]
+}

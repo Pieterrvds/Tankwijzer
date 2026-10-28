@@ -3,7 +3,10 @@
  * Reviews are stored on the device (IndexedDB) and tied to a hash of the rule's content:
  * when a rule changes, its old review no longer counts and it must be checked again.
  */
-import type { Rule } from '../domain/knowledge';
+import type { OwnerOnlyRule, Rule } from '../domain/knowledge';
+
+/** Anything the inspector can review: an inspector rule or an owner-only rule. */
+export type ReviewableRule = Rule | OwnerOnlyRule;
 
 export interface RuleReview {
   ruleId: string;
@@ -26,7 +29,7 @@ function stableStringify(v: unknown): string {
 }
 
 /** FNV-1a hash of the rule content, ignoring `verified_by_user` and `note`. */
-export function ruleHash(rule: Rule): string {
+export function ruleHash(rule: ReviewableRule): string {
   const { verified_by_user: _v, note: _n, ...content } = rule;
   let h = 0x811c9dc5;
   for (const ch of stableStringify(content)) {
@@ -38,7 +41,7 @@ export function ruleHash(rule: Rule): string {
 
 export type ReviewState = 'geverifieerd' | 'akkoord' | 'niet_akkoord' | 'te_controleren';
 
-export function reviewState(rule: Rule, review: RuleReview | undefined): ReviewState {
+export function reviewState(rule: ReviewableRule, review: RuleReview | undefined): ReviewState {
   if (rule.verified_by_user) return 'geverifieerd';
   if (!review || review.ruleHash !== ruleHash(rule)) return 'te_controleren';
   return review.verdict;

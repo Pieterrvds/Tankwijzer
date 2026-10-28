@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { findRule, type PrecheckStep, type Rule } from "@tankwijzer/vlarem-core";
+import { articleLabel, findRule, type OwnerRule, type PrecheckStep } from "@tankwijzer/vlarem-core";
 import { fileToContent, type ClaudeClient, type InputFile } from "./client.ts";
 import { guardOwnerText } from "./output-guard.ts";
 
@@ -55,7 +55,7 @@ export async function assessPrecheckPhoto(
   photo: InputFile,
   tankSummary: string,
 ): Promise<PrecheckResult> {
-  const rules = step.ruleIds.map((id) => findRule(id)).filter((r): r is Rule => r !== null);
+  const rules = step.ruleIds.map((id) => findRule(id)).filter((r): r is OwnerRule => r !== null);
   const ruleList = rules.map((r) => `- ${r.id}: ${r.text_owner_nl}`).join("\n");
   const { data } = await ai.structured({
     schema: PrecheckAssessment,
@@ -83,7 +83,7 @@ export async function assessPrecheckPhoto(
     flags.push(...guarded.flags);
     points.push({
       ruleId: rule.id,
-      article: rule.article,
+      article: articleLabel(rule.article),
       status: p.status,
       observation_nl: guarded.text,
       requirement_nl: rule.attention_nl ?? rule.text_owner_nl,

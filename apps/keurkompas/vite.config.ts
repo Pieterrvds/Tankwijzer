@@ -3,6 +3,12 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { fileURLToPath } from 'node:url';
+
+/** Shared VLAREM knowledge (rules, standard sentences, brand list, VLAREM text), also used by Tankwijzer. */
+const VLAREM_KNOWLEDGE = fileURLToPath(
+  new URL('../../packages/vlarem-core/knowledge', import.meta.url),
+);
 
 /**
  * Mode "preview-artifact" (npm run build:preview) builds one self-contained page for sharing a
@@ -13,6 +19,7 @@ export default defineConfig(({ mode }) => {
   const preview = mode === 'preview-artifact';
   return {
     base: preview ? './' : '/',
+    resolve: { alias: { '@vlarem-knowledge': VLAREM_KNOWLEDGE } },
     define: preview ? { 'import.meta.env.VITE_PREVIEW': JSON.stringify('true') } : {},
     plugins: [
       react(),

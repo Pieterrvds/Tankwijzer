@@ -1,9 +1,9 @@
 /**
  * Independence rule: proposed texts must never mention brands, products or suppliers.
  * `findBrandNames` is applied to every rule output (and later to AI output, M4/M5);
- * a text containing a blocked name is not proposed.
+ * a text containing a blocked name is not proposed. The list is shared with Tankwijzer.
  */
-import blocklist from '../../knowledge/brand-blocklist.json';
+import blocklist from '@vlarem-knowledge/brand-blocklist.json';
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

@@ -70,14 +70,14 @@ describe("pre-check", () => {
       photo_quality: "ok",
       retake_reason_nl: null,
       points: [
-        { rule_id: "VL-BUND-SINGLE-WALL", status: "possible_attention", observation_nl: "De inkuiping lijkt kleiner dan de tank." },
-        { rule_id: "VL-MADE-UP", status: "possible_attention", observation_nl: "x" },
+        { rule_id: "inkuiping.enkelwandig", status: "possible_attention", observation_nl: "De inkuiping lijkt kleiner dan de tank." },
+        { rule_id: "verzonnen.regel", status: "possible_attention", observation_nl: "x" },
       ],
     });
     const res = await assessPrecheckPhoto(ai, step, photo, "bovengronds, enkelwandig");
     expect(res.points).toHaveLength(1);
     expect(res.points[0]!.requirement_nl).toContain("inkuiping");
-    expect(res.guardFlags).toContain("unknown_rule:VL-MADE-UP");
+    expect(res.guardFlags).toContain("unknown_rule:verzonnen.regel");
   });
 });
 
@@ -88,7 +88,7 @@ describe("vraag het", () => {
     const ai = fakeClient({
       covered_by_sources: true,
       answer_nl: "Een bovengrondse tank krijgt om de 3 jaar een beperkt onderzoek.",
-      citations: [{ type: "rule", id: "VL-FREQ-LIMITED-ABOVE" }],
+      citations: [{ type: "rule", id: "frequentie.beperkt_bovengronds" }],
     });
     const res = await askQuestion(ai, "Hoe vaak keuren?", ctx);
     expect(res.covered).toBe(true);
@@ -96,7 +96,7 @@ describe("vraag het", () => {
   });
 
   it("falls back when citations are invented", async () => {
-    const ai = fakeClient({ covered_by_sources: true, answer_nl: "Om de 7 jaar.", citations: [{ type: "rule", id: "VL-NOPE" }] });
+    const ai = fakeClient({ covered_by_sources: true, answer_nl: "Om de 7 jaar.", citations: [{ type: "rule", id: "bestaat.niet" }] });
     const res = await askQuestion(ai, "Hoe vaak keuren?", ctx);
     expect(res.answer_nl).toBe(NOT_SURE_NL);
     expect(res.covered).toBe(false);

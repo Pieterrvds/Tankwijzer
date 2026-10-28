@@ -2,7 +2,7 @@ import type { Site, Tank, VaultDocument } from "../model.ts";
 import { deriveFacts, FACT_QUESTIONS_NL, type Facts, type FactValue } from "../facts.ts";
 import { computeDeadlines, type DeadlineItem } from "../deadlines.ts";
 import { checkDocuments, type DocumentCheck } from "../documents.ts";
-import type { Condition, Rule, RuleSet } from "./schema.ts";
+import { articleLabel, type Condition, type OwnerRule, type RuleSet } from "./schema.ts";
 
 /** Kleene three-valued logic: true, false or unknown (null). */
 type Tri = boolean | null;
@@ -78,7 +78,7 @@ export const STATUS_LABELS_NL: Record<ObligationStatus, string> = {
 
 export interface Obligation {
   ruleId: string;
-  category: Rule["category"];
+  category: OwnerRule["category"];
   title_nl: string;
   text_nl: string;
   why_nl: string;
@@ -104,8 +104,8 @@ export interface TankEvaluation {
   documents: DocumentCheck[];
 }
 
-function isValidOn(rule: Rule, today: string): boolean {
-  if (rule.valid_from > today) return false;
+function isValidOn(rule: OwnerRule, today: string): boolean {
+  if (rule.valid_from !== null && rule.valid_from > today) return false;
   // Transition rules stay visible after their deadline so the owner sees the period lapsed.
   if (rule.category === "transition") return true;
   return rule.valid_until === null || today <= rule.valid_until;
@@ -128,7 +128,7 @@ export function buildFacts(
   return { facts, deadlines, documents };
 }
 
-export function evaluateRule(rule: Rule, facts: Facts): Obligation | null {
+export function evaluateRule(rule: OwnerRule, facts: Facts): Obligation | null {
   const applies = evaluate(rule.applies_when, facts);
   if (applies.value === false) return null;
 
@@ -151,7 +151,7 @@ export function evaluateRule(rule: Rule, facts: Facts): Obligation | null {
     title_nl: rule.title_nl,
     text_nl: rule.text_owner_nl,
     why_nl: rule.why_nl,
-    article: rule.article,
+    article: articleLabel(rule.article),
     source: rule.source,
     verified_by_user: rule.verified_by_user,
     status,

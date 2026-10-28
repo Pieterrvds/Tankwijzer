@@ -1,3 +1,5 @@
+import blocklist from "../knowledge/brand-blocklist.json" with { type: "json" };
+
 /**
  * Guards on any text shown to owners (rule texts and AI output).
  *
@@ -6,43 +8,10 @@
  */
 
 /**
- * Known brand names in the tank, overfill-protection and leak-detection market.
- * Matched case-insensitively on whole words. Extend this list when a new brand shows up in logs.
+ * Known brand names, shared with KeurKompas (knowledge/brand-blocklist.json).
+ * Matched case-insensitively on whole words. Extend the file when a new brand shows up in logs.
  */
-export const BRAND_BLOCKLIST: string[] = [
-  "Afriso",
-  "Roth",
-  "Schütz",
-  "Schutz",
-  "Kingspan",
-  "Titan Pro",
-  "Dehoust",
-  "Werit",
-  "Cemo",
-  "Haase",
-  "Sotralentz",
-  "Rotex",
-  "Tecalemit",
-  "Gok",
-  "Hectronic",
-  "Franklin Fueling",
-  "OPW",
-  "Veeder-Root",
-  "Tokheim",
-  "Gilbarco",
-  "Piusi",
-  "Emiliana Serbatoi",
-  "Deso",
-  "Tankcheck",
-  "Elvatank",
-  "Tuffa",
-  "Harlequin",
-  "Enduramaxx",
-  "Atlas Tanks",
-  "Covestro",
-  "ACO",
-  "Wavin",
-];
+export const BRAND_BLOCKLIST: string[] = blocklist.brands;
 
 /** Phrases that would make Tankwijzer sound like an inspection. */
 export const FORBIDDEN_CLAIMS: RegExp[] = [

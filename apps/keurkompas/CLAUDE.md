@@ -5,8 +5,8 @@ Flemish _milieudeskundige_ who inspects storage tanks under **VLAREM II, hoofdst
 
 **What it is (course correction, see the inspector's brief):** not a checklist and not a
 report filler. The inspector **captures** (photo, voice, text — one tap, offline), and **asks**
-("Vraag het") when unsure. The assistant answers from the **previous report**, `knowledge/`
-(rules, standard sentences, VLAREM text, approved lessons) and what was just captured, with its
+("Vraag het") when unsure. The assistant answers from the **previous report**, the shared VLAREM knowledge
+(rules, standard sentences, VLAREM text), approved lessons and what was just captured, with its
 sources and certainty. In the background it **sorts** every photo and note into a BEPO section
 (T2–T20), and everything is **synced to the inspector's OneDrive** → PC, sorted per inspection.
 It gets smarter through **lessons**: corrections the inspector approves.
@@ -18,7 +18,7 @@ commented, and work in small, tested steps.
 
 1. **The AI suggests, the inspector decides.** Every answer carries its sources and a
    certainty. Uncertain → _te bevestigen_ (blue `#0070C0` on yellow, like the report).
-2. **Grounded answers only.** Sources: previous report, `knowledge/`, the captured
+2. **Grounded answers only.** Sources: previous report, the knowledge base, the captured
    photo/voice/text. Not covered → "Niet zeker — controleer ter plaatse." Never guess.
 3. **Safe learning loop.** 👎 + correction → proposed lesson → only used after the inspector
    approves it (Lessen screen). Approved lessons go to OneDrive, then into
@@ -27,13 +27,27 @@ commented, and work in small, tested steps.
 5. **Never invent values.** Unknown = empty/`null`. A field the AI cannot read stays empty.
 6. **Independence rule.** Never recommend or mention brands, products or suppliers in any
    proposed text. Refer only to the VLAREM requirement. `src/rules/brands.ts` blocks names from
-   `knowledge/brand-blocklist.json` in rule output; tests check all rule texts.
+   the shared `brand-blocklist.json` in rule output; tests check all rule texts.
 7. **Offline-first.** Capture always works; AI and sync jobs queue until there is signal.
-8. **Law from the repo, not from model memory.** Rules and wording live in `knowledge/`.
-   Standard sentences are used **verbatim**.
+8. **Law from the repo, not from model memory.** Rules and wording live in the shared
+   knowledge (see below). Standard sentences are used **verbatim**.
 9. **Section codes match the report exactly** (T2–T20), so the sorted export maps 1:1.
 10. **API keys never in the app.** The phone talks to our server (`server/`), which holds the
     Anthropic/Mistral keys. OneDrive goes directly from the phone with the user's own login.
+
+## Shared with Tankwijzer
+
+KeurKompas is one app in the Tankwijzer monorepo. The VLAREM knowledge is shared with
+Tankwijzer (the tank owners' app) in `packages/vlarem-core/knowledge`, imported here as
+`@vlarem-knowledge/…`: `rules/*.json`, `standard-sentences.json`, `brand-blocklist.json`,
+`text/`. Format: `packages/vlarem-core/knowledge/README.md`.
+
+- Each rule stores article, source, validity and `verified_by_user` once, with an `inspector`
+  part (evaluated here) and/or an `owner` part (Tankwijzer). Rules without an inspector part
+  appear only in "Regels nakijken" (section "Alleen voor eigenaars").
+- Never rename a rule id: reviews on the device are stored by id and content hash.
+- Owner data never changes findings here, and nothing from KeurKompas (notes, photos, AI
+  answers) is ever shown in Tankwijzer.
 
 ## Report conventions (for exported text)
 
@@ -86,32 +100,34 @@ src/
   sync/        OneDrive: Microsoft login (MSAL), Graph upload, upload plan, notes.md, loop.
   domain/      Zod schemas for the inspection + factories.
   checklist/   BEPO section/item definitions (T2–T19) — used invisibly: sorting, rules, names.
-  rules/       Rules engine (hints), brand check, rule review, docs/rules.md generator.
+  rules/       Rules engine (hints), brand check, rule review, docs/rules.md generator,
+               tests for every inspector rule (knowledge-rules.test.ts).
   db/          Dexie (IndexedDB) database + repository (all writes go through here).
   capture/     Photo compression/EXIF, audio recording, previous-report reading (PDF/Word).
   components/  UI (Timeline, Composers, VorigeKeuringCard, Hints, AnswerView, …).
   pages/       Screens: list, inspection, settings, lessons, rule review.
 server/        Cloudflare Worker (Hono): /api/ask, /api/extract, /api/tag, /api/transcribe.
-knowledge/     context.md, standard-sentences.json, rules/, lessons.md, vocabulary.json,
-               brand-blocklist.json, text/ (VLAREM text, added by the user).
-evals/         Eval cases every prompt/knowledge/model change must pass (npm run evals).
+knowledge/     context.md, lessons.md, vocabulary.json (app-specific; rules, standard
+               sentences, brand list and VLAREM text are shared — see above).
+evals/         Eval cases every prompt/knowledge/model change must pass (pnpm evals).
 docs/          SETUP.md (deploy), architecture.md, data-model.md, rules.md, examples/
 ```
 
 ## Commands
 
+Run `pnpm install` once from the repository root; run the others in `apps/keurkompas`.
+
 ```bash
-npm install          # once
-npm run dev          # dev server on http://localhost:5173 (add --host to test on a phone)
-npm run check        # lint + format check + typecheck + tests (run before every commit)
-npm test             # unit tests (Vitest)
-npm run build        # production build incl. service worker
-npm run preview      # serve the production build (test offline/install here)
-npm run docs:rules   # regenerate docs/rules.md after changing knowledge/rules
-npm run knowledge:bundle  # regenerate the server's knowledge after changing knowledge/
-npm run evals        # run the eval cases against Claude (needs ANTHROPIC_API_KEY; costs cents)
-npm run server:dev   # run the API locally (server/.dev.vars holds local secrets)
-npm run build:preview  # one-file preview page (assistant via claude.ai, no server)
+pnpm dev             # dev server on http://localhost:5173 (add --host to test on a phone)
+pnpm run check       # lint + format check + typecheck + tests (run before every commit)
+pnpm test            # unit tests (Vitest)
+pnpm build           # production build incl. service worker
+pnpm preview         # serve the production build (test offline/install here)
+pnpm docs:rules      # regenerate docs/rules.md after changing the shared rules
+pnpm knowledge:bundle  # regenerate the server's knowledge after changing any knowledge
+pnpm evals           # run the eval cases against Claude (needs ANTHROPIC_API_KEY; costs cents)
+pnpm server:dev      # run the API locally (server/.dev.vars holds local secrets)
+pnpm build:preview   # one-file preview page (assistant via claude.ai, no server)
 ```
 
 ## Coding conventions
@@ -121,7 +137,7 @@ npm run build:preview  # one-file preview page (assistant via claude.ai, no serv
 - Never rename a checklist item id (stored data refers to it). Add new ids instead.
 - Dexie schema changes: add a new `version(n)` block; never edit an existing one.
 - Tap targets ≥ 48 px (prefer 56 px), high contrast, labels always visible.
-- Every rule in `knowledge/rules` gets unit tests (fires + stays quiet). Pure functions where possible.
+- Every inspector rule gets unit tests (fires + stays quiet). Pure functions where possible.
 - Rules never fire on unknown values; never guess an article (`"te bevestigen"`).
 - Choice-field option texts are referenced by rules: change both together (a test checks).
 - Bump `SCHEMA_VERSION` when `inspection.json` changes incompatibly.

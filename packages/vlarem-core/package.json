@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Shared VLAREM knowledge core: tank data model, rules engine, deadlines, brand guard.",
+  "description": "Shared VLAREM knowledge core for KeurKompas and Tankwijzer: rules, standard sentences, brand blocklist, VLAREM text, data model, engine, deadlines.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./knowledge/*": "./knowledge/*"
   },
   "scripts": {
     "test": "vitest run",

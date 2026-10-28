@@ -1,27 +1,41 @@
 /**
- * Rules engine: evaluates the JSON rules in knowledge/rules against one inspection.
+ * Rules engine: evaluates the shared JSON rules (inspector parts) against one inspection.
  *
- * Pure functions, no I/O: easy to unit test (see knowledge/rules/rules.test.ts).
+ * Pure functions, no I/O: easy to unit test (see ./knowledge-rules.test.ts).
  * The engine never changes the inspection. It returns proposals; the inspector decides.
  */
-import { Rule, RulesFile, StandardSentencesFile, fillSentence } from '../domain/knowledge';
+import sentencesJson from '@vlarem-knowledge/standard-sentences.json';
+import {
+  Rule,
+  SharedRulesFile,
+  StandardSentencesFile,
+  fillSentence,
+  splitSharedRules,
+  type OwnerOnlyRule,
+} from '../domain/knowledge';
 import type { Inspection, Severity } from '../domain/schemas';
-import sentencesJson from '../../knowledge/standard-sentences.json';
 import { findBrandNames } from './brands';
 import { evaluate } from './conditions';
 import { factResolver } from './facts';
 
-/** All rules from knowledge/rules/*.json, validated at load time, in report (section) order. */
-export const RULES: Rule[] = Object.entries(
-  import.meta.glob<unknown>('../../knowledge/rules/*.json', { eager: true, import: 'default' }),
+/** The shared rule files (packages/vlarem-core/knowledge/rules), validated at load time. */
+const SHARED = Object.entries(
+  import.meta.glob<unknown>('@vlarem-knowledge/rules/*.json', { eager: true, import: 'default' }),
 )
   .sort(([a], [b]) => a.localeCompare(b))
-  .flatMap(([path, json]) => {
-    const parsed = RulesFile.safeParse(json);
+  .map(([path, json]) => {
+    const parsed = SharedRulesFile.safeParse(json);
     if (!parsed.success) throw new Error(`Ongeldige regels in ${path}: ${parsed.error.message}`);
-    return parsed.data.rules;
-  })
-  .sort((a, b) => Number(a.section.slice(1)) - Number(b.section.slice(1)));
+    return splitSharedRules(parsed.data);
+  });
+
+/** All rules with an inspector part, in report (section) order. */
+export const RULES: Rule[] = SHARED.flatMap((s) => s.inspector).sort(
+  (a, b) => Number(a.section.slice(1)) - Number(b.section.slice(1)),
+);
+
+/** Rules that only apply to owners (Tankwijzer), e.g. inspection frequency: reviewed, not evaluated. */
+export const OWNER_ONLY_RULES: OwnerOnlyRule[] = SHARED.flatMap((s) => s.ownerOnly);
 
 export const STANDARD_SENTENCES = StandardSentencesFile.parse(sentencesJson).sentences;
 

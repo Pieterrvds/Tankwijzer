@@ -14,9 +14,13 @@ Run the commands below in the project folder on your PC (Node.js 20 or newer ins
 
 ## 1. The server (keeps the API keys away from the phone)
 
+From the repository root (KeurKompas is part of the Tankwijzer monorepo):
+
 ```bash
-npm install
+pnpm install
 ```
+
+Then run the commands below in `apps/keurkompas`.
 
 ```bash
 npx wrangler login

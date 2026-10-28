@@ -1,6 +1,12 @@
 # Tankwijzer
 
-Web app for companies that own storage tanks in Flanders. It explains in plain Dutch which VLAREM II rules apply to each tank, when the next inspections are due, which documents to have ready and what will *probably* need attention, and it lets owners request an inspection.
+Two apps for storage tanks in Flanders that share one VLAREM "brain":
+
+- **Tankwijzer** (`apps/tankwijzer`) — for companies that own tanks.
+- **KeurKompas** (`apps/keurkompas`) — the inspector's offline field assistant (see its own
+  [README](apps/keurkompas/README.md) and [CLAUDE.md](apps/keurkompas/CLAUDE.md)).
+
+Tankwijzer is a web app for companies that own storage tanks in Flanders. It explains in plain Dutch which VLAREM II rules apply to each tank, when the next inspections are due, which documents to have ready and what will *probably* need attention, and it lets owners request an inspection.
 
 **Tankwijzer is not an inspection.** Only a recognised environmental expert (erkend milieudeskundige) can inspect a tank and place a sticker. Every check result says so.
 
@@ -9,10 +15,13 @@ Web app for companies that own storage tanks in Flanders. It explains in plain D
 ```
 apps/
   tankwijzer/      # owner web app (React + Vite, Dutch UI, installable PWA)
-  keurkompas/      # inspector app — to be moved in here (see docs/decisions.md)
+  keurkompas/      # inspector field app (React + Vite PWA, offline, OneDrive sync, Worker API)
 packages/
-  vlarem-core/     # shared knowledge core: data model (Zod), rules JSON + engine,
-                   # deadlines, documents checklist, brand/claim guards, .ics, dossier schema, evals
+  vlarem-core/     # shared core
+    knowledge/     #   shared VLAREM knowledge: rules/*.json (one rule, both apps), standard
+                   #   sentences, brand blocklist, VLAREM text — see knowledge/README.md
+    src/           #   owner data model (Zod), owner rules engine, deadlines, documents
+                   #   checklist, guards, .ics, dossier schema; evals/ = owner eval set
   ai/              # shared Claude clients: photo reading, document extraction,
                    # pre-check, grounded "Vraag het", output guards
 services/
@@ -42,7 +51,7 @@ Without `ANTHROPIC_API_KEY` the app works, but photo reading, document extractio
 Other commands:
 
 ```bash
-pnpm test        # all packages
+pnpm test        # all packages (pnpm lint and pnpm format:check cover KeurKompas)
 ```
 
 ```bash
@@ -54,13 +63,17 @@ pnpm build && pnpm start   # API on :8787 also serves the built web app
 ```
 
 ```bash
+pnpm dev:keurkompas        # KeurKompas dev server
+```
+
+```bash
 pnpm reminders   # daily job: email reminders 3 months and 1 month before deadlines
 ```
 
 ## How it fits together
 
-- **Rules decide, the AI explains.** Applicability, statuses and deadlines come from `packages/vlarem-core` (rules in `src/rules/rules.vl.json`). Unknown facts give status *onbekend — foto of info nodig* with the question to answer, never a guess.
-- Every rule has `article`, `source`, `valid_from`/`valid_until`, `verified_by_user` (all `false` until the inspector approves them) and separate `text_owner_nl` / `text_inspector_nl`.
+- **One source of truth for VLAREM.** Every rule lives once in `packages/vlarem-core/knowledge/rules`, with its `article`, `source`, `valid_from`/`valid_until` and `verified_by_user`, plus an `inspector` part (KeurKompas: BEPO section, trigger, report wording via `text_inspector_nl` or a standard sentence) and/or an `owner` part (Tankwijzer: `text_owner_nl`, `applies_when`/`ok_when`). The inspector approves rules in KeurKompas ("Regels nakijken"), including the owner wording and the owner-only rules.
+- **Rules decide, the AI explains.** Applicability, statuses and deadlines come from the rules engine. Unknown facts give status *onbekend — foto of info nodig* with the question to answer, never a guess.
 - AI outputs are structured JSON validated with Zod. Pre-check points and chat citations must reference existing rule ids; invented ones are dropped. A guard redacts brand names and replaces "is conform"-style claims. Every AI call is logged with its input and 👍/👎 feedback (`ai_log` table).
 - **Keuringsdossier**: when an owner books an inspection and gives consent, the API builds a dossier (schema `KeuringsDossier` in vlarem-core) labelled `volgens exploitant`, shared through a 90-day token link. Pre-check conclusions are never included, only the photos.
 - **Privacy**: every owner table carries `company_id` and every query filters on it. One-click export and delete in Instellingen.

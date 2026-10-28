@@ -112,7 +112,7 @@ export function computeDeadlines(tank: Tank, site: Site | null, today: string): 
       title_nl: "Keuring vóór eerste gebruik (of laatste keuring toevoegen)",
       basis_nl:
         "Een nieuwe tank moet gekeurd worden voor het eerste gebruik. Is de tank al gekeurd? Voeg dan de laatste keuring toe.",
-      ruleId: "VL-FREQ-COMMISSIONING",
+      ruleId: "frequentie.eerste_keuring",
     });
   }
 
@@ -126,7 +126,7 @@ export function computeDeadlines(tank: Tank, site: Site | null, today: string): 
         dueDate: latest.nextDueDate,
         title_nl: "Volgend beperkt onderzoek",
         basis_nl: `Datum volgens de laatste keuringsklever (${limited.note}).`,
-        ruleId: tank.placement === "underground" ? "VL-FREQ-LIMITED-UNDER" : "VL-FREQ-LIMITED-ABOVE",
+        ruleId: tank.placement === "underground" ? "frequentie.beperkt_ondergronds" : "frequentie.beperkt_bovengronds",
       });
     } else {
       add({
@@ -135,7 +135,7 @@ export function computeDeadlines(tank: Tank, site: Site | null, today: string): 
         dueDate: addYears(latest.date, limited.years),
         title_nl: "Volgend beperkt onderzoek",
         basis_nl: `Berekend vanaf de keuring van ${nl(latest.date)}: ${limited.note}.`,
-        ruleId: tank.placement === "underground" ? "VL-FREQ-LIMITED-UNDER" : "VL-FREQ-LIMITED-ABOVE",
+        ruleId: tank.placement === "underground" ? "frequentie.beperkt_ondergronds" : "frequentie.beperkt_bovengronds",
       });
     }
   } else if (latest && !limited) {
@@ -145,7 +145,7 @@ export function computeDeadlines(tank: Tank, site: Site | null, today: string): 
       dueDate: null,
       title_nl: "Volgend beperkt onderzoek",
       basis_nl: "Kan niet berekend worden: geef aan of de tank bovengronds of ondergronds staat.",
-      ruleId: "VL-FREQ-LIMITED-ABOVE",
+      ruleId: "frequentie.beperkt_bovengronds",
     });
   }
 
@@ -162,7 +162,7 @@ export function computeDeadlines(tank: Tank, site: Site | null, today: string): 
       basis_nl: base
         ? `Berekend vanaf ${lastGeneral ? "het laatste algemeen onderzoek" : "de ingebruikname/bouw"} (${nl(base)}): ${general.note}.`
         : `Kan niet berekend worden: vul de datum van ingebruikname of het laatste algemeen onderzoek in (${general.note}).`,
-      ruleId: tank.placement === "underground" ? "VL-FREQ-GENERAL-UNDER" : "VL-FREQ-GENERAL-ABOVE",
+      ruleId: tank.placement === "underground" ? "frequentie.algemeen_ondergronds" : "frequentie.algemeen_bovengronds",
     });
   }
 
@@ -174,7 +174,7 @@ export function computeDeadlines(tank: Tank, site: Site | null, today: string): 
       dueDate: addMonths(latest.date, ORANGE_MONTHS),
       title_nl: "Herkeuring na oranje klever",
       basis_nl: `Oranje klever op ${nl(latest.date)}: vullen mag nog maximaal 6 maanden; herkeuring vóór het einde van die termijn.`,
-      ruleId: "VL-STICKER-ORANGE",
+      ruleId: "klever.oranje",
     });
   }
   if (latest?.sticker === "red") {
@@ -184,7 +184,7 @@ export function computeDeadlines(tank: Tank, site: Site | null, today: string): 
       dueDate: latest.date,
       title_nl: "Rode klever: niet vullen — herstellen en herkeuren",
       basis_nl: `Rode klever op ${nl(latest.date)}: vullen is verboden tot na herstelling en een nieuwe keuring.`,
-      ruleId: "VL-STICKER-RED",
+      ruleId: "klever.rood",
     });
   }
 
@@ -196,7 +196,7 @@ export function computeDeadlines(tank: Tank, site: Site | null, today: string): 
       dueDate: TRANSITION_2027,
       title_nl: "Overvulfluit volstaat nog tot 31/12/2027",
       basis_nl: "Een fluit als overvulwaarschuwing is toegelaten tot en met 31/12/2027.",
-      ruleId: "VL-TRANS-OVERFILL-WHISTLE",
+      ruleId: "overvulling.alarmfluit_tot_2027",
     });
   }
   if (tank.leakDetection === "single_signal") {
@@ -206,7 +206,7 @@ export function computeDeadlines(tank: Tank, site: Site | null, today: string): 
       dueDate: TRANSITION_2027,
       title_nl: "Lekdetectie met enkelvoudig signaal: toegelaten tot 31/12/2027",
       basis_nl: "Lekdetectiesystemen met één signaal, gebouwd vóór 01/01/2025, zijn toegelaten tot en met 31/12/2027.",
-      ruleId: "VL-TRANS-LEAK-SINGLE-SIGNAL",
+      ruleId: "lekdetectie.een_signaal_tot_2027",
     });
   }
   if (
@@ -219,7 +219,7 @@ export function computeDeadlines(tank: Tank, site: Site | null, today: string): 
       dueDate: KWS_DEADLINE,
       title_nl: "Koolwaterstofafscheider (KWS) tegen 01/01/2028",
       basis_nl: "Voor KWS-afscheiders geldt een overgangstermijn tot 01/01/2028.",
-      ruleId: "VL-TRANS-KWS",
+      ruleId: "kws.afscheider_2028",
     });
   }
   if (tank.material === "pe") {
@@ -232,7 +232,7 @@ export function computeDeadlines(tank: Tank, site: Site | null, today: string): 
       basis_nl: ref
         ? `PE-tanks hebben een maximale levensduur van 25 jaar (bouw: ${nl(ref)}).`
         : "PE-tanks hebben een maximale levensduur van 25 jaar; vul het bouwjaar in om de datum te berekenen.",
-      ruleId: "VL-PE-LIFESPAN",
+      ruleId: "levensduur.thermoplast",
     });
   }
 

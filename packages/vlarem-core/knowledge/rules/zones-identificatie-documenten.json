@@ -1,0 +1,291 @@
+{
+  "$comment": "One rule = shared legal metadata (article, source, validity, verified_by_user) + an optional 'inspector' part (KeurKompas: BEPO section, trigger, report wording) + an optional 'owner' part (Tankwijzer: plain explanation, applies_when/ok_when). verified_by_user stays false until the inspector confirms the rule. Format: ../README.md.",
+  "rules": [
+    {
+      "id": "lospiste.nok",
+      "title_nl": "Standplaats tankwagen niet in orde",
+      "region": "VL",
+      "article": "art. 5.17.4.1.16. 6° a",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T17",
+        "trigger": {
+          "fact": "item:T17.standplaats_tankwagen.status",
+          "op": "eq",
+          "value": "NOK"
+        },
+        "severity": "tekortkoming",
+        "standard_sentence": "lospiste_nok",
+        "items": [
+          "T17.standplaats_tankwagen"
+        ]
+      }
+    },
+    {
+      "id": "kws.afscheider_2028",
+      "title_nl": "KWS-afscheider: termijn 01/01/2028",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "note": "Tekst is een voorstel van KeurKompas: wat er tegen 01/01/2028 moet gebeuren is nog te bevestigen.",
+      "inspector": {
+        "section": "T17",
+        "trigger": {
+          "fact": "item:T17.kws_afscheider.status",
+          "op": "in",
+          "value": [
+            "OK",
+            "NOK"
+          ]
+        },
+        "severity": "opmerking",
+        "text_inspector_nl": "Voor de KWS-afscheider geldt de termijn van 01 januari 2028.",
+        "items": [
+          "T17.kws_afscheider"
+        ]
+      },
+      "owner": {
+        "category": "transition",
+        "title_nl": "Koolwaterstofafscheider (KWS) tegen 01/01/2028",
+        "text_owner_nl": "Voor koolwaterstofafscheiders (KWS) geldt een overgangstermijn tot 01/01/2028. Vraag uw milieudeskundige of dit voor uw site van toepassing is.",
+        "why_nl": "Een KWS houdt brandstofresten uit het afvalwater.",
+        "applies_when": {
+          "fact": "product",
+          "op": "in",
+          "value": [
+            "diesel",
+            "gasoline"
+          ]
+        },
+        "ok_when": {
+          "fact": "kws_separator_present",
+          "op": "is_true"
+        },
+        "attention_nl": "Er is geen KWS aangeduid voor deze site. Laat nakijken of de regel er een vraagt tegen 01/01/2028.",
+        "deadline": "2028-01-01"
+      }
+    },
+    {
+      "id": "kws.reinigingsattest",
+      "title_nl": "KWS-afscheider: reinigingsattest",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "note": "Tekst is een voorstel van KeurKompas.",
+      "inspector": {
+        "section": "T17",
+        "trigger": {
+          "fact": "item:T17.kws_afscheider.status",
+          "op": "in",
+          "value": [
+            "OK",
+            "NOK"
+          ]
+        },
+        "severity": "informatie",
+        "text_inspector_nl": "Het reinigingsattest van de KWS-afscheider is voor te leggen.",
+        "items": [
+          "T17.kws_afscheider"
+        ]
+      }
+    },
+    {
+      "id": "tankenpark.nvt",
+      "title_nl": "Tankenpark NVT",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "KeurKompas — afgeleid uit de checklist (M1)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T19",
+        "trigger": {
+          "fact": "tank.deelVanTankenpark",
+          "op": "eq",
+          "value": false
+        },
+        "severity": "herinnering",
+        "text_inspector_nl": "Geen deel van een tankenpark.",
+        "items": [
+          "T19.peilputten",
+          "T19.blussen_koelen",
+          "T19.toegankelijkheid",
+          "T19.dossier"
+        ],
+        "suggest_status": "NVT"
+      }
+    },
+    {
+      "id": "identificatie.onvolledig",
+      "title_nl": "Identificatie onvolledig",
+      "region": "VL",
+      "article": "art. 5.17.4.3.5 §2",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "note": "Algemene tekst (voorstel). Ontbreekt enkel de tankinhoud, gebruik dan standaardzin 'identificatie_inhoud'.",
+      "inspector": {
+        "section": "T18",
+        "trigger": {
+          "any": [
+            {
+              "fact": "item:T18.vulpunt.status",
+              "op": "eq",
+              "value": "NOK"
+            },
+            {
+              "fact": "item:T18.tank.status",
+              "op": "eq",
+              "value": "NOK"
+            }
+          ]
+        },
+        "severity": "opmerking",
+        "text_inspector_nl": "De identificatie bij het vulpunt en de tank dient aangevuld te worden (art. 5.17.4.3.5. §2.).",
+        "items": [
+          "T18.vulpunt",
+          "T18.tank"
+        ]
+      },
+      "owner": {
+        "category": "identification",
+        "title_nl": "Identificatie op de tank en aan de vulplaats",
+        "text_owner_nl": "Op de tank én aan de vulplaats moeten het tanknummer, de inhoud, de productnaam en de gevarensymbolen staan.",
+        "why_nl": "Bij een incident of levering moet iedereen meteen zien wat er in de tank zit, en vult de leverancier zeker de juiste tank.",
+        "applies_when": {
+          "fact": "region",
+          "op": "eq",
+          "value": "VL"
+        },
+        "ok_when": {
+          "all": [
+            {
+              "fact": "identification_tank",
+              "op": "is_true"
+            },
+            {
+              "fact": "identification_filling_point",
+              "op": "is_true"
+            }
+          ]
+        },
+        "attention_nl": "De regel vraagt tanknummer, inhoud, productnaam en gevarensymbolen op de tank en aan de vulplaats."
+      }
+    },
+    {
+      "id": "omgevingsvergunning.niet_voorgelegd",
+      "title_nl": "Omgevingsvergunning niet voorgelegd",
+      "region": "VL",
+      "article": "art. 5.17.4.3.16.§1.1°",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T5",
+        "trigger": {
+          "fact": "item:T5.omgevingsvergunning.values.situatie",
+          "op": "eq",
+          "value": "niet voorgelegd"
+        },
+        "severity": "opmerking",
+        "standard_sentence": "omgevingsvergunning_niet_voorgelegd",
+        "items": [
+          "T5.omgevingsvergunning"
+        ]
+      }
+    },
+    {
+      "id": "omgevingsvergunning.verlopen",
+      "title_nl": "Omgevingsvergunning verlopen",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T5",
+        "trigger": {
+          "any": [
+            {
+              "fact": "item:T5.omgevingsvergunning.values.situatie",
+              "op": "eq",
+              "value": "verlopen"
+            },
+            {
+              "fact": "item:T5.omgevingsvergunning.values.geldig_tot",
+              "op": "dateBefore",
+              "valueFact": "inspection.datum"
+            }
+          ]
+        },
+        "severity": "opmerking",
+        "standard_sentence": "omgevingsvergunning_verlopen",
+        "items": [
+          "T5.omgevingsvergunning"
+        ]
+      }
+    },
+    {
+      "id": "conformiteitsattest.niet_voorgelegd",
+      "title_nl": "Conformiteitsattest niet voorgelegd",
+      "region": "VL",
+      "article": "art. 5.17.4.3.3",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T5",
+        "trigger": {
+          "fact": "item:T5.conformiteitsattest.status",
+          "op": "eq",
+          "value": "NOK"
+        },
+        "severity": "opmerking",
+        "standard_sentence": "conformiteitsattest",
+        "items": [
+          "T5.conformiteitsattest"
+        ]
+      }
+    },
+    {
+      "id": "documenten.klaar_voor_keuring",
+      "title_nl": "Documenten klaar voor de keuring",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "Tankwijzer (seed, nog na te kijken)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "owner": {
+        "category": "documents",
+        "title_nl": "Documenten klaar voor de keuring",
+        "text_owner_nl": "De milieudeskundige vraagt bij de keuring: het vorige keuringsverslag, het verslag van de eerste keuring, de omgevingsvergunning (met bijzondere voorwaarden), het conformiteitsattest van de tankbouwer en het veiligheidsinformatieblad (VIB) van het product.",
+        "why_nl": "Ontbrekende documenten zijn een vaak voorkomende opmerking in keuringsverslagen.",
+        "applies_when": {
+          "fact": "region",
+          "op": "eq",
+          "value": "VL"
+        },
+        "ok_when": {
+          "fact": "documents_complete",
+          "op": "is_true"
+        },
+        "attention_nl": "Er ontbreken documenten in uw documentenkluis. Bekijk de lijst onder 'Documenten'."
+      }
+    }
+  ]
+}

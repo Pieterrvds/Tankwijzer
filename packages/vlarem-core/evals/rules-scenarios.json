@@ -11,11 +11,11 @@
         "inspections": [{ "date": "2024-03-15", "type": "limited", "sticker": "green" }]
       },
       "expect": {
-        "VL-BUND-SINGLE-WALL": "attention",
-        "VL-FREQ-LIMITED-ABOVE": "likely_ok",
-        "VL-IDENT-TANK": "unknown"
+        "inkuiping.enkelwandig": "attention",
+        "frequentie.beperkt_bovengronds": "likely_ok",
+        "identificatie.onvolledig": "unknown"
       },
-      "absent": ["VL-FREQ-GENERAL-ABOVE", "VL-IDENT-NO-FIRE", "VL-TRANS-KWS"],
+      "absent": ["frequentie.algemeen_bovengronds", "ontvlambaar.controles", "kws.afscheider_2028"],
       "deadlines": { "limited": "2027-03-15" }
     },
     {
@@ -28,9 +28,9 @@
         "inspections": [{ "date": "2025-06-01", "type": "limited", "sticker": "green" }]
       },
       "expect": {
-        "VL-FREQ-LIMITED-UNDER": "attention",
-        "VL-FREQ-GENERAL-UNDER": "attention",
-        "VL-TRANS-KWS": "attention"
+        "frequentie.beperkt_ondergronds": "attention",
+        "frequentie.algemeen_ondergronds": "attention",
+        "kws.afscheider_2028": "attention"
       },
       "deadlines": { "limited": "2026-06-01", "general": "2020-05-01", "transition": "2028-01-01" }
     },
@@ -42,8 +42,8 @@
         "placement": "underground", "material": "gvk", "product": "heating_oil", "capacityL": 3000,
         "inspections": [{ "date": "2026-01-10", "type": "limited", "sticker": "green" }]
       },
-      "expect": { "VL-GVK-UNDER-EXEMPT": "info", "VL-FREQ-LIMITED-UNDER": "likely_ok" },
-      "absent": ["VL-FREQ-GENERAL-UNDER"],
+      "expect": { "frequentie.gvk_ondergronds_vrijgesteld": "info", "frequentie.beperkt_ondergronds": "likely_ok" },
+      "absent": ["frequentie.algemeen_ondergronds"],
       "deadlines": { "limited": "2028-01-10" }
     },
     {
@@ -56,10 +56,10 @@
         "inspections": [{ "date": "2026-08-31", "type": "limited", "sticker": "orange" }]
       },
       "expect": {
-        "VL-STICKER-ORANGE": "attention",
-        "VL-TRANS-OVERFILL-WHISTLE": "likely_ok",
-        "VL-IDENT-NO-FIRE": "unknown",
-        "VL-FREQ-GENERAL-ABOVE": "attention"
+        "klever.oranje": "attention",
+        "overvulling.alarmfluit_tot_2027": "likely_ok",
+        "ontvlambaar.controles": "unknown",
+        "frequentie.algemeen_bovengronds": "attention"
       },
       "deadlines": { "orange_reinspection": "2027-02-28", "general": "2020-01-01" }
     },
@@ -68,7 +68,7 @@
       "today": "2026-10-27",
       "site": {},
       "tank": {},
-      "expect": { "VL-FREQ-COMMISSIONING": "attention", "VL-FREQ-LIMITED-ABOVE": "unknown" },
+      "expect": { "frequentie.eerste_keuring": "attention", "frequentie.beperkt_bovengronds": "unknown" },
       "deadlines": {}
     }
   ]

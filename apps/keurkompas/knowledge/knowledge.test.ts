@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fillSentence, StandardSentencesFile } from '../src/domain/knowledge';
-import sentencesJson from './standard-sentences.json';
+import sentencesJson from '@vlarem-knowledge/standard-sentences.json';
 
 const file = StandardSentencesFile.parse(sentencesJson);
 

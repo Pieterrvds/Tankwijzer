@@ -1,0 +1,81 @@
+{
+  "$comment": "One rule = shared legal metadata (article, source, validity, verified_by_user) + an optional 'inspector' part (KeurKompas: BEPO section, trigger, report wording) + an optional 'owner' part (Tankwijzer: plain explanation, applies_when/ok_when). verified_by_user stays false until the inspector confirms the rule. Format: ../README.md.",
+  "rules": [
+    {
+      "id": "levensduur.thermoplast",
+      "title_nl": "Thermoplastische houder nadert of overschrijdt 25 jaar",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "note": "'Nabij' = binnen 3 jaar (vóór het volgende beperkt onderzoek). [datum] wordt ingevuld met het jaartal bouwjaar + 25.",
+      "inspector": {
+        "section": "T3",
+        "trigger": {
+          "all": [
+            {
+              "fact": "tank.material",
+              "op": "eq",
+              "value": "thermoplast"
+            },
+            {
+              "fact": "derived.jarenTotEindeThermoplast",
+              "op": "lte",
+              "value": 3
+            }
+          ]
+        },
+        "severity": "opmerking",
+        "standard_sentence": "levensduur_thermoplast",
+        "fill": {
+          "datum": "derived.eindeLevensduurThermoplast"
+        },
+        "items": [
+          "T3.levensduur"
+        ]
+      },
+      "owner": {
+        "category": "construction",
+        "title_nl": "PE-tank: maximaal 25 jaar",
+        "text_owner_nl": "Tanks uit polyetheen (PE) mogen maximaal 25 jaar gebruikt worden.",
+        "why_nl": "Kunststof veroudert; na 25 jaar is het risico op scheuren te groot.",
+        "applies_when": {
+          "fact": "material",
+          "op": "eq",
+          "value": "pe"
+        },
+        "ok_when": {
+          "fact": "age_years",
+          "op": "lt",
+          "value": 25
+        },
+        "attention_nl": "Deze PE-tank lijkt 25 jaar of ouder. De regel laat dan geen verder gebruik toe."
+      }
+    },
+    {
+      "id": "levensduur.verstreken",
+      "title_nl": "Berekende levensduur verstreken",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T3",
+        "trigger": {
+          "fact": "derived.levensduurVerstreken",
+          "op": "eq",
+          "value": true
+        },
+        "severity": "tekortkoming",
+        "standard_sentence": "levensduur_verstreken",
+        "items": [
+          "T3.levensduur"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "$comment": "One rule = shared legal metadata (article, source, validity, verified_by_user) + an optional 'inspector' part (KeurKompas: BEPO section, trigger, report wording) + an optional 'owner' part (Tankwijzer: plain explanation, applies_when/ok_when). verified_by_user stays false until the inspector confirms the rule. Format: ../README.md.",
+  "rules": [
+    {
+      "id": "inkuiping.enkelwandig",
+      "title_nl": "Enkelwandige houder: inkuiping voor de grootste houder",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T10",
+        "trigger": {
+          "fact": "tank.wall",
+          "op": "eq",
+          "value": "enkelwandig"
+        },
+        "severity": "herinnering",
+        "text_inspector_nl": "Enkelwandige houder: de inkuiping moet de inhoud van de grootste houder kunnen bevatten.",
+        "items": [
+          "T10.capaciteit"
+        ]
+      },
+      "owner": {
+        "category": "construction",
+        "title_nl": "Enkelwandige tank in een inkuiping",
+        "text_owner_nl": "Een enkelwandige bovengrondse tank moet in een inkuiping (opvangbak) staan die minstens de inhoud van de grootste tank erin kan opvangen.",
+        "why_nl": "Als de tank lekt, blijft het product in de inkuiping in plaats van in de bodem.",
+        "applies_when": {
+          "all": [
+            {
+              "fact": "placement",
+              "op": "eq",
+              "value": "above_ground"
+            },
+            {
+              "fact": "wall",
+              "op": "eq",
+              "value": "single"
+            }
+          ]
+        },
+        "ok_when": {
+          "all": [
+            {
+              "fact": "in_bund",
+              "op": "is_true"
+            },
+            {
+              "fact": "bund_holds_tank",
+              "op": "is_true"
+            }
+          ]
+        },
+        "attention_nl": "De regel vraagt een inkuiping die minstens de inhoud van de grootste tank kan opvangen. Laat nakijken of dat hier zo is."
+      }
+    },
+    {
+      "id": "inkuiping.capaciteit_kleiner_dan_inhoud",
+      "title_nl": "Opvangcapaciteit kleiner dan inhoud houder",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "KeurKompas — afgeleid uit de checklist (M1)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T10",
+        "trigger": {
+          "fact": "item:T10.capaciteit.values.capaciteit_l",
+          "op": "lt",
+          "valueFact": "tank.inhoudLiter"
+        },
+        "severity": "herinnering",
+        "text_inspector_nl": "De opgegeven opvangcapaciteit is kleiner dan de inhoud van deze houder. Controleer de opvangcapaciteit.",
+        "items": [
+          "T10.capaciteit"
+        ]
+      }
+    },
+    {
+      "id": "vulpunt.geen_vaste_voorziening",
+      "title_nl": "Geen vaste vloeistofdichte voorziening aan vulpunt of verdeelzone",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "note": "Tekst is een voorstel van KeurKompas.",
+      "inspector": {
+        "section": "T15",
+        "trigger": {
+          "any": [
+            {
+              "fact": "item:T15.opvang.status",
+              "op": "eq",
+              "value": "NOK"
+            },
+            {
+              "fact": "item:T17.verdeelzone.status",
+              "op": "eq",
+              "value": "NOK"
+            }
+          ]
+        },
+        "severity": "opmerking",
+        "text_inspector_nl": "Er is geen vaste vloeistofdichte voorziening aanwezig. Een lekbak en absorberend granulaat dienen voorzien te worden.",
+        "items": [
+          "T15.opvang",
+          "T17.verdeelzone"
+        ]
+      },
+      "owner": {
+        "category": "construction",
+        "title_nl": "Vloeistofdichte voorziening aan de vulplaats",
+        "text_owner_nl": "Aan de vulplaats moet een vloeistofdichte voorziening zijn die gemorst product opvangt.",
+        "why_nl": "Bij het vullen wordt soms wat gemorst; dat mag niet in de bodem of de riolering terechtkomen.",
+        "applies_when": {
+          "fact": "region",
+          "op": "eq",
+          "value": "VL"
+        },
+        "ok_when": {
+          "fact": "filling_point_liquid_tight",
+          "op": "is_true"
+        },
+        "attention_nl": "De regel vraagt een vloeistofdichte voorziening aan de vulplaats. Laat nakijken of die aanwezig is."
+      }
+    }
+  ]
+}

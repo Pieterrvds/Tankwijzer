@@ -1,0 +1,99 @@
+{
+  "$comment": "One rule = shared legal metadata (article, source, validity, verified_by_user) + an optional 'inspector' part (KeurKompas: BEPO section, trigger, report wording) + an optional 'owner' part (Tankwijzer: plain explanation, applies_when/ok_when). verified_by_user stays false until the inspector confirms the rule. Format: ../README.md.",
+  "rules": [
+    {
+      "id": "ontvlambaar.controles",
+      "title_nl": "Ontvlambaar product of ATEX-zone: extra controles",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T13",
+        "trigger": {
+          "fact": "derived.ontvlambaarOfAtex",
+          "op": "eq",
+          "value": true
+        },
+        "severity": "herinnering",
+        "text_inspector_nl": "Vlampunt < 55 °C of ATEX-zone: aarding (T13) is relevant. Controleer de ATEX-uitvoering van lekdetectie, systeem tegen overvulling en peilmeter. Pictogrammen verbod op vuur en roken (T18) zijn vereist.",
+        "items": [
+          "T13.aarding",
+          "T8.atex",
+          "T11.atex",
+          "T12.atex",
+          "T18.pictogrammen"
+        ]
+      },
+      "owner": {
+        "category": "identification",
+        "title_nl": "Pictogrammen 'vuur en roken verboden'",
+        "text_owner_nl": "Bij producten met een vlampunt onder 55 °C (bv. benzine) moeten aan de tank en de vulplaats de pictogrammen 'vuur, open vlam en roken verboden' hangen.",
+        "why_nl": "Dampen van ontvlambare producten kunnen ontbranden.",
+        "applies_when": {
+          "fact": "flammable",
+          "op": "is_true"
+        },
+        "ok_when": {
+          "fact": "no_fire_signs",
+          "op": "is_true"
+        },
+        "attention_nl": "De regel vraagt de pictogrammen 'vuur, open vlam en roken verboden' bij ontvlambare producten."
+      }
+    },
+    {
+      "id": "aarding.nvt_niet_ontvlambaar",
+      "title_nl": "Aarding NVT bij vlampunt ≥ 55 °C zonder ATEX",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T13",
+        "trigger": {
+          "fact": "derived.ontvlambaarOfAtex",
+          "op": "eq",
+          "value": false
+        },
+        "severity": "herinnering",
+        "text_inspector_nl": "Vlampunt ≥ 55 °C en geen ATEX-zone: aarding is NVT, ook als het vorige verslag OK vermeldde.",
+        "items": [
+          "T13.aarding"
+        ],
+        "suggest_status": "NVT"
+      }
+    },
+    {
+      "id": "atex.nvt_niet_ontvlambaar",
+      "title_nl": "ATEX en pictogrammen NVT bij vlampunt ≥ 55 °C zonder ATEX",
+      "region": "VL",
+      "article": "te bevestigen",
+      "source": "KeurKompas — afgeleid uit de checklist (M1)",
+      "valid_from": null,
+      "valid_until": null,
+      "verified_by_user": false,
+      "inspector": {
+        "section": "T18",
+        "trigger": {
+          "fact": "derived.ontvlambaarOfAtex",
+          "op": "eq",
+          "value": false
+        },
+        "severity": "herinnering",
+        "text_inspector_nl": "Vlampunt ≥ 55 °C en geen ATEX-zone: ATEX-uitvoering en pictogrammen verbod op vuur en roken zijn NVT.",
+        "items": [
+          "T8.atex",
+          "T9.atex",
+          "T11.atex",
+          "T12.atex",
+          "T18.pictogrammen"
+        ],
+        "suggest_status": "NVT"
+      }
+    }
+  ]
+}

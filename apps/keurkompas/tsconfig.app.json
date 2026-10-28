@@ -13,14 +13,16 @@
     "noEmit": true,
     "skipLibCheck": true,
     "types": ["vite/client", "vite-plugin-pwa/client"],
-
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": false,
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
+    "paths": {
+      "@vlarem-knowledge/*": ["../../packages/vlarem-core/knowledge/*"]
+    }
   },
   "include": ["src", "knowledge"]
 }

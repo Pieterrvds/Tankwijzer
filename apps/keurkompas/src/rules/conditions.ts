@@ -1,5 +1,5 @@
 /**
- * The small condition language used in `knowledge/rules/*.json` triggers.
+ * The small condition language used in the inspector `trigger` of the shared rules (packages/vlarem-core/knowledge/rules).
  *
  *   { "all": [ … ] }            every sub-condition is true
  *   { "any": [ … ] }            at least one sub-condition is true

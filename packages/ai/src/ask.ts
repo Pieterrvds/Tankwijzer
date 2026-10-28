@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { NOT_SURE_NL, type RuleSet } from "@tankwijzer/vlarem-core";
+import { NOT_SURE_NL, articleLabel, type RuleSet } from "@tankwijzer/vlarem-core";
 import type { ClaudeClient } from "./client.ts";
 import { guardOwnerText } from "./output-guard.ts";
 
@@ -46,7 +46,7 @@ function knowledgeBase(ruleset: RuleSet): string {
   return ruleset.rules
     .map(
       (r) =>
-        `[${r.id}] ${r.title_nl}\nArtikel: ${r.article}\n${r.text_owner_nl}\nWaarom: ${r.why_nl}` +
+        `[${r.id}] ${r.title_nl}\nArtikel: ${articleLabel(r.article)}\n${r.text_owner_nl}\nWaarom: ${r.why_nl}` +
         (r.deadline ? `\nDeadline: ${r.deadline}` : ""),
     )
     .join("\n\n");
@@ -99,7 +99,7 @@ export async function askQuestion(ai: ClaudeClient, question: string, ctx: AskCo
   for (const c of data.citations) {
     if (c.type === "rule" && rules.has(c.id)) {
       const r = rules.get(c.id)!;
-      citations.push({ type: "rule", id: c.id, label: `${r.title_nl} — ${r.article}` });
+      citations.push({ type: "rule", id: c.id, label: `${r.title_nl} — ${articleLabel(r.article)}` });
     } else if (c.type === "tank" && tanks.has(c.id)) {
       citations.push({ type: "tank", id: c.id, label: `Tank ${tanks.get(c.id)!.label}` });
     } else if (c.type === "document" && docs.has(c.id)) {

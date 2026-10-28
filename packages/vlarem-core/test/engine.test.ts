@@ -63,14 +63,14 @@ describe("evaluateTank", () => {
     const res = evaluateTank(RULESET_VL, makeTank(), makeSite(), [], "2026-10-27");
     expect(res.rulesetVersion).toBe(RULESET_VL.version);
     for (const o of res.obligations) {
-      expect(o.ruleId).toMatch(/^VL-/);
+      expect(o.ruleId).toMatch(/^[a-z0-9_.-]+$/);
       expect(o.article.length).toBeGreaterThan(0);
     }
   });
 
   it("unknown status comes with questions for the owner", () => {
     const res = evaluateTank(RULESET_VL, makeTank({ placement: "above_ground", wall: "single" }), makeSite(), [], "2026-10-27");
-    const bund = res.obligations.find((o) => o.ruleId === "VL-BUND-SINGLE-WALL");
+    const bund = res.obligations.find((o) => o.ruleId === "inkuiping.enkelwandig");
     expect(bund?.status).toBe("unknown");
     expect(bund?.questions_nl).toContain("Staat de tank in een inkuiping (opvangbak)?");
   });
@@ -100,14 +100,14 @@ describe("evaluateTank", () => {
     ];
     const res = evaluateTank(RULESET_VL, tank, makeSite(), docs, "2026-10-27");
     expect(res.documents.every((d) => d.present)).toBe(true);
-    expect(res.obligations.find((o) => o.ruleId === "VL-DOCS-READY")?.status).toBe("likely_ok");
+    expect(res.obligations.find((o) => o.ruleId === "documenten.klaar_voor_keuring")?.status).toBe("likely_ok");
   });
 
   it("transition rule turns into attention after its deadline", () => {
     const tank = makeTank({ overfillAlarm: "whistle" });
     const before = evaluateTank(RULESET_VL, tank, makeSite(), [], "2027-12-31");
     const after = evaluateTank(RULESET_VL, tank, makeSite(), [], "2028-01-01");
-    const get = (r: typeof before) => r.obligations.find((o) => o.ruleId === "VL-TRANS-OVERFILL-WHISTLE")?.status;
+    const get = (r: typeof before) => r.obligations.find((o) => o.ruleId === "overvulling.alarmfluit_tot_2027")?.status;
     expect(get(before)).toBe("likely_ok");
     expect(get(after)).toBe("attention");
   });

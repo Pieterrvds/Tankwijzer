@@ -11,24 +11,24 @@ export const PRECHECK_STEPS: PrecheckStep[] = [
     id: "bund",
     title_nl: "De inkuiping",
     instruction_nl: "Neem een foto van de hele inkuiping (opvangbak) rond de tank, met de tank erin.",
-    ruleIds: ["VL-BUND-SINGLE-WALL"],
+    ruleIds: ["inkuiping.enkelwandig"],
   },
   {
     id: "filling_point",
     title_nl: "De vulplaats",
     instruction_nl: "Neem een foto van de vulplaats: de vulaansluiting en de vloer of lekbak eronder.",
-    ruleIds: ["VL-FILLING-POINT-LIQUID-TIGHT", "VL-IDENT-FILLING-POINT", "VL-IDENT-NO-FIRE"],
+    ruleIds: ["vulpunt.geen_vaste_voorziening", "identificatie.onvolledig", "ontvlambaar.controles"],
   },
   {
     id: "identification",
     title_nl: "De identificatie op de tank",
     instruction_nl: "Neem een foto van de tekst en symbolen op de tank (tanknummer, inhoud, product, gevarensymbolen).",
-    ruleIds: ["VL-IDENT-TANK", "VL-IDENT-NO-FIRE"],
+    ruleIds: ["identificatie.onvolledig", "ontvlambaar.controles"],
   },
   {
     id: "overfill",
     title_nl: "De overvulbeveiliging",
     instruction_nl: "Neem een foto van de overvulbeveiliging of het overvulalarm, en van de peilmeter als die er is.",
-    ruleIds: ["VL-OVERFILL-PROTECTION", "VL-OVERFILL-SEPARATE-GAUGE", "VL-TRANS-OVERFILL-WHISTLE", "VL-PROTOTYPE-OVERFILL"],
+    ruleIds: ["overvulling.ontbreekt", "peilmeting.is_overvulsysteem", "overvulling.alarmfluit_tot_2027", "overvulling.nieuw_kenplaat"],
   },
 ];
