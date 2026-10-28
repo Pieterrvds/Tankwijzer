@@ -8,10 +8,13 @@
   },
   "scripts": {
     "dev": "pnpm --parallel --filter @tankwijzer/api --filter @tankwijzer/web dev",
-    "build": "pnpm --filter @tankwijzer/web build",
+    "dev:keurkompas": "pnpm --filter keurkompas dev",
+    "build": "pnpm --filter @tankwijzer/web --filter keurkompas build",
     "start": "pnpm --filter @tankwijzer/api start",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r --if-present lint",
+    "format:check": "pnpm -r --if-present format:check",
     "reminders": "pnpm --filter @tankwijzer/api reminders"
   },
   "devDependencies": {
