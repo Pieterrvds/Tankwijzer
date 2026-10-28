@@ -1,0 +1,11 @@
+# Cloudflare Workers config for the KeurKompas API. Deploy: see docs/SETUP.md.
+name = "keurkompas-api"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+[vars]
+# The app's address(es), comma-separated. Change after deploying the app.
+ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:4173"
+TRANSCRIBE_PROVIDER = "mistral"
+
+# Secrets (never in this file): wrangler secret put ANTHROPIC_API_KEY / APP_TOKEN / MISTRAL_API_KEY

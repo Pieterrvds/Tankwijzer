@@ -1,0 +1,171 @@
+{
+  "$comment": "Seed rules. verified_by_user stays false until the inspector confirms the rule in the app (Regels nakijken). Trigger language: knowledge/rules/README.md.",
+  "rules": [
+    {
+      "id": "lospiste.nok",
+      "title_nl": "Standplaats tankwagen niet in orde",
+      "section": "T17",
+      "trigger": {
+        "fact": "item:T17.standplaats_tankwagen.status",
+        "op": "eq",
+        "value": "NOK"
+      },
+      "severity": "tekortkoming",
+      "article": "art. 5.17.4.1.16. 6° a",
+      "standard_sentence": "lospiste_nok",
+      "items": ["T17.standplaats_tankwagen"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false
+    },
+    {
+      "id": "kws.afscheider_2028",
+      "title_nl": "KWS-afscheider: termijn 01/01/2028",
+      "section": "T17",
+      "trigger": {
+        "fact": "item:T17.kws_afscheider.status",
+        "op": "in",
+        "value": ["OK", "NOK"]
+      },
+      "severity": "opmerking",
+      "article": "te bevestigen",
+      "text_nl": "Voor de KWS-afscheider geldt de termijn van 01 januari 2028.",
+      "items": ["T17.kws_afscheider"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false,
+      "note": "Tekst is een voorstel van KeurKompas: wat er tegen 01/01/2028 moet gebeuren is nog te bevestigen."
+    },
+    {
+      "id": "kws.reinigingsattest",
+      "title_nl": "KWS-afscheider: reinigingsattest",
+      "section": "T17",
+      "trigger": {
+        "fact": "item:T17.kws_afscheider.status",
+        "op": "in",
+        "value": ["OK", "NOK"]
+      },
+      "severity": "informatie",
+      "article": "te bevestigen",
+      "text_nl": "Het reinigingsattest van de KWS-afscheider is voor te leggen.",
+      "items": ["T17.kws_afscheider"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false,
+      "note": "Tekst is een voorstel van KeurKompas."
+    },
+    {
+      "id": "tankenpark.nvt",
+      "title_nl": "Tankenpark NVT",
+      "section": "T19",
+      "trigger": {
+        "fact": "tank.deelVanTankenpark",
+        "op": "eq",
+        "value": false
+      },
+      "severity": "herinnering",
+      "article": "te bevestigen",
+      "text_nl": "Geen deel van een tankenpark.",
+      "items": ["T19.peilputten", "T19.blussen_koelen", "T19.toegankelijkheid", "T19.dossier"],
+      "suggest_status": "NVT",
+      "valid_from": null,
+      "valid_until": null,
+      "source": "KeurKompas — afgeleid uit de checklist (M1)",
+      "verified_by_user": false
+    },
+    {
+      "id": "identificatie.onvolledig",
+      "title_nl": "Identificatie onvolledig",
+      "section": "T18",
+      "trigger": {
+        "any": [
+          {
+            "fact": "item:T18.vulpunt.status",
+            "op": "eq",
+            "value": "NOK"
+          },
+          {
+            "fact": "item:T18.tank.status",
+            "op": "eq",
+            "value": "NOK"
+          }
+        ]
+      },
+      "severity": "opmerking",
+      "article": "art. 5.17.4.3.5 §2",
+      "text_nl": "De identificatie bij het vulpunt en de tank dient aangevuld te worden (art. 5.17.4.3.5. §2.).",
+      "items": ["T18.vulpunt", "T18.tank"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false,
+      "note": "Algemene tekst (voorstel). Ontbreekt enkel de tankinhoud, gebruik dan standaardzin 'identificatie_inhoud'."
+    },
+    {
+      "id": "omgevingsvergunning.niet_voorgelegd",
+      "title_nl": "Omgevingsvergunning niet voorgelegd",
+      "section": "T5",
+      "trigger": {
+        "fact": "item:T5.omgevingsvergunning.values.situatie",
+        "op": "eq",
+        "value": "niet voorgelegd"
+      },
+      "severity": "opmerking",
+      "article": "art. 5.17.4.3.16.§1.1°",
+      "standard_sentence": "omgevingsvergunning_niet_voorgelegd",
+      "items": ["T5.omgevingsvergunning"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false
+    },
+    {
+      "id": "omgevingsvergunning.verlopen",
+      "title_nl": "Omgevingsvergunning verlopen",
+      "section": "T5",
+      "trigger": {
+        "any": [
+          {
+            "fact": "item:T5.omgevingsvergunning.values.situatie",
+            "op": "eq",
+            "value": "verlopen"
+          },
+          {
+            "fact": "item:T5.omgevingsvergunning.values.geldig_tot",
+            "op": "dateBefore",
+            "valueFact": "inspection.datum"
+          }
+        ]
+      },
+      "severity": "opmerking",
+      "article": "te bevestigen",
+      "standard_sentence": "omgevingsvergunning_verlopen",
+      "items": ["T5.omgevingsvergunning"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false
+    },
+    {
+      "id": "conformiteitsattest.niet_voorgelegd",
+      "title_nl": "Conformiteitsattest niet voorgelegd",
+      "section": "T5",
+      "trigger": {
+        "fact": "item:T5.conformiteitsattest.status",
+        "op": "eq",
+        "value": "NOK"
+      },
+      "severity": "opmerking",
+      "article": "art. 5.17.4.3.3",
+      "standard_sentence": "conformiteitsattest",
+      "items": ["T5.conformiteitsattest"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false
+    }
+  ]
+}

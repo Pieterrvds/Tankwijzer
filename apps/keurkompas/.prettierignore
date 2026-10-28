@@ -1,0 +1,9 @@
+dist
+dev-dist
+node_modules
+package-lock.json
+coverage
+public
+docs/rules.md
+dist-preview
+server/src/knowledge.generated.ts

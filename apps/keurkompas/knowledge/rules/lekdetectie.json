@@ -1,0 +1,158 @@
+{
+  "$comment": "Seed rules. verified_by_user stays false until the inspector confirms the rule in the app (Regels nakijken). Trigger language: knowledge/rules/README.md.",
+  "rules": [
+    {
+      "id": "lekdetectie.kijkglas_vlotter_logboek",
+      "title_nl": "Kijkglas of vlotter: procedure met logboek",
+      "section": "T8",
+      "trigger": {
+        "fact": "item:T8.systeem.values.type",
+        "op": "matches",
+        "value": "kijkglas|vlotter"
+      },
+      "severity": "informatie",
+      "article": "te bevestigen",
+      "text_nl": "Bij een lekdetectie van het type kijkglas of vlotter dient de werking periodiek gecontroleerd te worden volgens een procedure, met registratie in een logboek.",
+      "items": ["T8.systeem"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false,
+      "note": "Tekst is een voorstel van KeurKompas: graag vervangen door de exacte standaardzin."
+    },
+    {
+      "id": "lekdetectie.een_signaal_tot_2027",
+      "title_nl": "Bestaande lekdetectie met één signaal: toegelaten tot 31/12/2027",
+      "section": "T8",
+      "trigger": {
+        "all": [
+          {
+            "fact": "item:T8.systeem.values.bouwperiode",
+            "op": "eq",
+            "value": "bestaand (vóór 01/01/2025)"
+          },
+          {
+            "fact": "item:T8.signaal.values.signalen",
+            "op": "in",
+            "value": ["enkel akoestisch", "enkel visueel"]
+          }
+        ]
+      },
+      "severity": "opmerking",
+      "article": "te bevestigen",
+      "text_nl": "Het lekdetectiesysteem beschikt slechts over één signaal (akoestisch of visueel). Dit is voor een bestaand systeem toegelaten tot 31/12/2027.",
+      "items": ["T8.signaal"],
+      "valid_from": null,
+      "valid_until": "2027-12-31",
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false,
+      "note": "Tekst is een voorstel van KeurKompas. Wat geldt na 31/12/2027 is nog niet als regel opgenomen."
+    },
+    {
+      "id": "lekdetectie.nieuw_kenplaat",
+      "title_nl": "Nieuwe lekdetectie zonder prototypekeurnummer of kenplaat",
+      "section": "T8",
+      "trigger": {
+        "all": [
+          {
+            "fact": "item:T8.systeem.values.bouwperiode",
+            "op": "eq",
+            "value": "nieuw (vanaf 01/01/2025)"
+          },
+          {
+            "fact": "item:T8.kenplaat.status",
+            "op": "eq",
+            "value": "NOK"
+          }
+        ]
+      },
+      "severity": "tekortkoming",
+      "article": "art. 5.17.4.1.21, bijlage 5.17.3",
+      "standard_sentence": "kenplaat_lekdetectie",
+      "items": ["T8.kenplaat"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false
+    },
+    {
+      "id": "lekdetectie.ontbreekt_dubbelwandig",
+      "title_nl": "Geen lekdetectie op dubbelwandige houder",
+      "section": "T8",
+      "trigger": {
+        "all": [
+          {
+            "fact": "tank.wall",
+            "op": "eq",
+            "value": "dubbelwandig"
+          },
+          {
+            "fact": "item:T8.systeem.values.aanwezig",
+            "op": "eq",
+            "value": "NEEN"
+          }
+        ]
+      },
+      "severity": "tekortkoming",
+      "article": "art. 5.17.4.1.21, bijlage 5.17.3",
+      "standard_sentence": "lekdetectie_ontbreekt",
+      "items": ["T8.systeem"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false
+    },
+    {
+      "id": "lekdetectie.doorvoer_nvt_enkelwandig",
+      "title_nl": "Dubbelwandige doorvoer NVT bij enkelwandige houder",
+      "section": "T9",
+      "trigger": {
+        "fact": "tank.wall",
+        "op": "eq",
+        "value": "enkelwandig"
+      },
+      "severity": "herinnering",
+      "article": "te bevestigen",
+      "text_nl": "Enkelwandige houder: geen dubbelwandige doorvoer.",
+      "items": ["T6.doorvoer", "T9.systeem", "T9.signaal", "T9.atex", "T9.kenplaat"],
+      "suggest_status": "NVT",
+      "valid_from": null,
+      "valid_until": null,
+      "source": "KeurKompas — afgeleid uit de checklist (M1)",
+      "verified_by_user": false
+    },
+    {
+      "id": "dubbelwandig.doorvoeren_bewaakt",
+      "title_nl": "Dubbelwandig vóór 2025 met doorvoeren onder vloeistofniveau",
+      "section": "T6",
+      "trigger": {
+        "all": [
+          {
+            "fact": "tank.wall",
+            "op": "eq",
+            "value": "dubbelwandig"
+          },
+          {
+            "fact": "tank.bouwjaar",
+            "op": "lt",
+            "value": 2025
+          },
+          {
+            "fact": "item:T6.doorvoer.values.onder_vloeistofniveau",
+            "op": "eq",
+            "value": "JA"
+          }
+        ]
+      },
+      "severity": "opmerking",
+      "article": "te bevestigen",
+      "text_nl": "De doorvoeren door de dubbele wand onder het vloeistofniveau dienen bewaakt te worden.",
+      "items": ["T6.doorvoer"],
+      "valid_from": null,
+      "valid_until": null,
+      "source": "Richtlijnen BEPO-verslag (keurder)",
+      "verified_by_user": false,
+      "note": "Tekst is een voorstel van KeurKompas. 'Vóór 01/01/2025' wordt benaderd met bouwjaar < 2025."
+    }
+  ]
+}

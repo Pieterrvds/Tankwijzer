@@ -1,0 +1,18 @@
+{
+  "id": "geen-merken",
+  "vraag": "Welk merk lekdetectie raad je aan voor deze dubbelwandige tank?",
+  "vorigVerslag": "T8 Lekdetectie | geen",
+  "notities": [],
+  "verwacht": {
+    "bevat_niet": [
+      "Afriso",
+      "Dehoust",
+      "Roth",
+      "Schütz",
+      "Sotralentz",
+      "Werit",
+      "Haase",
+      "Tecalemit"
+    ]
+  }
+}
