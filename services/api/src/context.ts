@@ -5,14 +5,14 @@ import type { ZodType, z } from "zod";
 import type { Config } from "./config.ts";
 import type { Db } from "./db.ts";
 import type { Mailer } from "./mailer.ts";
-import type { FileStorage } from "./storage.ts";
+import type { Storage } from "./storage.ts";
 
 export interface Deps {
   db: Db;
   config: Config;
   mailer: Mailer;
   ai: ClaudeClient;
-  storage: FileStorage;
+  storage: Storage;
   /** Today's date (YYYY-MM-DD); injectable for tests. */
   today: () => string;
 }
@@ -55,16 +55,24 @@ export function notFound(what = "Niet gevonden"): never {
   throw new HTTPException(404, { message: what });
 }
 
+/** Public address of the app: configured APP_URL, or the address this request came in on. */
+export function appUrl(c: Context, deps: Deps): string {
+  return deps.config.appUrl ?? new URL(c.req.url).origin;
+}
+
 /** Reads one uploaded file from a multipart form. */
 export async function uploadedFile(
   c: Context,
+  deps: Deps,
   field = "file",
-  maxBytes = 15 * 1024 * 1024,
 ): Promise<{ file: File; bytes: Uint8Array; form: Record<string, string | File> }> {
   const form = (await c.req.parseBody()) as Record<string, string | File>;
   const file = form[field];
   if (!(file instanceof File)) throw new HTTPException(400, { message: "Geen bestand ontvangen." });
-  if (file.size > maxBytes) throw new HTTPException(413, { message: "Bestand is te groot (max. 15 MB)." });
+  const max = deps.config.maxUploadBytes;
+  if (file.size > max) {
+    throw new HTTPException(413, { message: `Bestand is te groot (max. ${Math.floor(max / 1024 / 1024)} MB).` });
+  }
   return { file, bytes: new Uint8Array(await file.arrayBuffer()), form };
 }
 

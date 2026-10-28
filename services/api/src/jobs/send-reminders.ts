@@ -5,14 +5,14 @@
 import { createClaudeClient } from "@tankwijzer/ai";
 import { todayIso } from "@tankwijzer/vlarem-core";
 import { loadConfig } from "../config.ts";
-import { openDb } from "../db.ts";
+import { openSqlite } from "../db-sqlite.ts";
 import { OutboxMailer } from "../mailer.ts";
 import { FileStorage } from "../storage.ts";
 import { sendReminders } from "../reminders.ts";
 
 const config = loadConfig();
 const deps = {
-  db: openDb(config.dbPath),
+  db: openSqlite(config.dbPath),
   config,
   mailer: new OutboxMailer(config.outboxDir),
   ai: createClaudeClient({}),

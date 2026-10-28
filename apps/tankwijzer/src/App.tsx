@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { NavLink, Navigate, Route, Routes } from "react-router";
 import { api, ApiError, type Me } from "./api.ts";
+import { setUploadLimit } from "./upload.ts";
 import { ErrorBox, Loading } from "./components/ui.tsx";
 import { LoginPage } from "./pages/Login.tsx";
 import { OnboardingPage } from "./pages/Onboarding.tsx";
@@ -33,7 +34,9 @@ export function App() {
 
   const refresh = useCallback(async () => {
     try {
-      setMe(await api.get<Me>("/me"));
+      const me = await api.get<Me>("/me");
+      setUploadLimit(me.uploadLimitBytes);
+      setMe(me);
       setState("ready");
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) setState("anon");
@@ -69,6 +72,11 @@ export function App() {
           </NavLink>
           <span className="company">{me.company.name}</span>
         </header>
+        {me.testMode && (
+          <div className="test-banner" role="status">
+            Testversie: aanmelden gebeurt zonder e-mailcontrole. Voer geen echte bedrijfsgegevens in.
+          </div>
+        )}
         <nav className="nav">
           <NavLink to="/" end>Mijn tanks</NavLink>
           <NavLink to="/planning">Planning</NavLink>

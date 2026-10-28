@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DOCUMENT_KIND_LABELS_NL, type DocumentFacts, type DocumentKind, type Site, type VaultDocument } from "@tankwijzer/vlarem-core";
 import { api, formatDate, type DocumentsResponse, type TankSummary } from "../api.ts";
 import { ErrorBox, Loading, useAsync } from "../components/ui.tsx";
+import { uploadForm } from "../upload.ts";
 
 const emptyFacts = (): DocumentFacts => ({
   permitNumber: null,
@@ -206,10 +207,8 @@ export function DocumentsPage() {
     setBusy(true);
     setError(null);
     setNotice(null);
-    const form = new FormData();
-    form.set("file", file);
-    if (kind) form.set("kind", kind);
     try {
+      const form = await uploadForm(file, kind ? { kind } : {});
       const res = await api.post<{ document: VaultDocument; extraction: { status: string; message?: string } }>("/documents", form);
       setNotice(
         res.extraction.status === "done"

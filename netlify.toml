@@ -1,0 +1,54 @@
+# Netlify: Tankwijzer web app + API (Netlify Functions, Netlify Database, Netlify Blobs).
+# KeurKompas is deployed separately (see apps/keurkompas/docs/SETUP.md).
+
+[build]
+  command = "pnpm --filter @tankwijzer/web build && pnpm --filter @tankwijzer/api bundle:netlify"
+  publish = "apps/tankwijzer/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "services/api/netlify/functions"
+  node_bundler = "esbuild"
+
+# Single-page app: the app's own routes serve index.html. /api/* is handled by services/api/netlify/functions/api.mts.
+[[redirects]]
+  from = "/login"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/tanks/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/planning"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/documenten"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/vraag"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/keuring-aanvragen"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/instellingen"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"

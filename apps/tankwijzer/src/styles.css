@@ -85,6 +85,10 @@ img { max-width: 100%; }
 .nav a.active, .tabs a.active { background: var(--primary-soft); color: var(--primary); }
 .main { flex: 1; width: 100%; max-width: 960px; margin: 0 auto; padding: 20px 16px 48px; }
 .footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 16px; border-top: 1px solid var(--border); }
+.test-banner {
+  background: var(--warn-soft); color: var(--warn); text-align: center; font-size: 0.9rem;
+  font-weight: 600; padding: 6px 16px; border-bottom: 1px solid var(--border);
+}
 .tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
 
 .stack { display: flex; flex-direction: column; gap: 20px; }

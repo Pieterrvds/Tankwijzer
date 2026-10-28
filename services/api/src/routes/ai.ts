@@ -33,11 +33,11 @@ export function aiRoutes(deps: Deps) {
   // Tank register: read nameplate / sticker / product label from a photo.
   app.post("/ai/read-photo", async (c) => {
     const companyId = requireCompany(c);
-    const { file, bytes, form } = await uploadedFile(c);
+    const { file, bytes, form } = await uploadedFile(c, deps);
     const hint = typeof form.hint === "string" ? form.hint : undefined;
     const reading = await withAi(() => readTankPhoto(deps.ai, { mediaType: file.type, base64: toBase64(bytes) }, hint));
     const patch = readingToTankPatch(reading);
-    const logId = logAi(deps.db, {
+    const logId = await logAi(deps.db, {
       companyId,
       feature: "read_photo",
       input: { filename: file.name, mimeType: file.type, size: file.size, hint },
@@ -51,10 +51,10 @@ export function aiRoutes(deps: Deps) {
 
   app.get("/precheck/steps", (c) => c.json(PRECHECK_STEPS));
 
-  app.get("/tanks/:id/precheck", (c) => {
+  app.get("/tanks/:id/precheck", async (c) => {
     const companyId = requireCompany(c);
-    const tank = getTank(deps.db, companyId, c.req.param("id")) ?? notFound("Tank niet gevonden");
-    const rows = all<{ id: string; step: string; result: string | null; created_at: string }>(
+    const tank = (await getTank(deps.db, companyId, c.req.param("id"))) ?? notFound("Tank niet gevonden");
+    const rows = await all<{ id: string; step: string; result: string | null; created_at: string }>(
       deps.db,
       "SELECT id, step, result, created_at FROM precheck_photos WHERE company_id = ? AND tank_id = ? ORDER BY created_at DESC",
       companyId,
@@ -71,9 +71,9 @@ export function aiRoutes(deps: Deps) {
 
   app.post("/tanks/:id/precheck/:step", async (c) => {
     const companyId = requireCompany(c);
-    const tank = getTank(deps.db, companyId, c.req.param("id")) ?? notFound("Tank niet gevonden");
+    const tank = (await getTank(deps.db, companyId, c.req.param("id"))) ?? notFound("Tank niet gevonden");
     const step = PRECHECK_STEPS.find((s) => s.id === c.req.param("step")) ?? notFound("Onbekende stap");
-    const { file, bytes } = await uploadedFile(c);
+    const { file, bytes } = await uploadedFile(c, deps);
 
     const summary = [
       LABELS_NL.placement[tank.placement],
@@ -86,8 +86,8 @@ export function aiRoutes(deps: Deps) {
       assessPrecheckPhoto(deps.ai, step, { mediaType: file.type, base64: toBase64(bytes) }, summary),
     );
     const id = newId("pho");
-    const path = deps.storage.save(companyId, id, bytes);
-    run(
+    const path = await deps.storage.save(companyId, id, bytes);
+    await run(
       deps.db,
       "INSERT INTO precheck_photos (id, company_id, tank_id, step, storage_path, mime_type, result, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       id,
@@ -99,7 +99,7 @@ export function aiRoutes(deps: Deps) {
       JSON.stringify(result),
       new Date().toISOString(),
     );
-    const logId = logAi(deps.db, {
+    const logId = await logAi(deps.db, {
       companyId,
       feature: "precheck",
       input: { tankId: tank.id, step: step.id, photoId: id, summary },
@@ -111,16 +111,16 @@ export function aiRoutes(deps: Deps) {
     return c.json({ logId, photoId: id, disclaimer: DISCLAIMER_NL, rulesetVersion: RULESET_VL.version, result });
   });
 
-  app.get("/precheck-photos/:id", (c) => {
+  app.get("/precheck-photos/:id", async (c) => {
     const companyId = requireCompany(c);
     const row =
-      get<{ storage_path: string; mime_type: string }>(
+      (await get<{ storage_path: string; mime_type: string }>(
         deps.db,
         "SELECT storage_path, mime_type FROM precheck_photos WHERE company_id = ? AND id = ?",
         companyId,
         c.req.param("id"),
-      ) ?? notFound();
-    return c.body(new Uint8Array(deps.storage.read(row.storage_path)), 200, { "Content-Type": row.mime_type });
+      )) ?? notFound();
+    return c.body(new Uint8Array(await deps.storage.read(row.storage_path)), 200, { "Content-Type": row.mime_type });
   });
 
   // Vraag het ----------------------------------------------------------------------
@@ -134,9 +134,9 @@ export function aiRoutes(deps: Deps) {
         history: z.array(z.object({ question: z.string(), answer: z.string() })).max(10).default([]),
       }),
     );
-    const sites = listSites(deps.db, companyId);
-    const docs = listDocuments(deps.db, companyId);
-    const tanks = listTanks(deps.db, companyId).map((t) => {
+    const sites = await listSites(deps.db, companyId);
+    const docs = await listDocuments(deps.db, companyId);
+    const tanks = (await listTanks(deps.db, companyId)).map((t) => {
       const ev = evaluate(deps, t, sites, docs);
       return {
         id: t.id,
@@ -153,7 +153,7 @@ export function aiRoutes(deps: Deps) {
     const documents = docs.map((d) => ({ id: d.id, title: d.title, kind: d.kind, facts: d.facts }));
     const ruleset = getRuleset("VL");
     const result = await withAi(() => askQuestion(deps.ai, body.question, { ruleset, tanks, documents, history: body.history }));
-    const logId = logAi(deps.db, {
+    const logId = await logAi(deps.db, {
       companyId,
       feature: "ask",
       input: { question: body.question, historyLength: body.history.length },
@@ -172,8 +172,8 @@ export function aiRoutes(deps: Deps) {
       c,
       z.object({ logId: z.string(), rating: z.union([z.literal(1), z.literal(-1)]), note: z.string().max(2000).optional() }),
     );
-    if (!get(deps.db, "SELECT 1 FROM ai_log WHERE id = ? AND company_id = ?", body.logId, companyId)) notFound();
-    run(
+    if (!(await get(deps.db, "SELECT 1 FROM ai_log WHERE id = ? AND company_id = ?", body.logId, companyId))) notFound();
+    await run(
       deps.db,
       "UPDATE ai_log SET feedback = ?, feedback_note = ? WHERE id = ? AND company_id = ?",
       body.rating,

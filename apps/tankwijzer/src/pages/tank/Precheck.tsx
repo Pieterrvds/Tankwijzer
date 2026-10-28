@@ -3,6 +3,7 @@ import type { PrecheckStep } from "@tankwijzer/vlarem-core";
 import { api, formatDate, type PrecheckResult } from "../../api.ts";
 import { useMe } from "../../App.tsx";
 import { Disclaimer, ErrorBox, Feedback, Loading, StatusBadge, useAsync } from "../../components/ui.tsx";
+import { uploadForm } from "../../upload.ts";
 
 interface StepState {
   photoId: string;
@@ -26,9 +27,8 @@ export function Precheck({ tankId }: { tankId: string }) {
   const upload = async (step: string, file: File) => {
     setBusy(step);
     setError(null);
-    const form = new FormData();
-    form.set("file", file);
     try {
+      const form = await uploadForm(file);
       const res = await api.post<{ logId: string; photoId: string; result: PrecheckResult }>(`/tanks/${tankId}/precheck/${step}`, form);
       state.setData({
         steps: {

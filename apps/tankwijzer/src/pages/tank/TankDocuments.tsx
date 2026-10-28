@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import type { DocumentCheck, Tank } from "@tankwijzer/vlarem-core";
 import { api } from "../../api.ts";
 import { ErrorBox } from "../../components/ui.tsx";
+import { uploadForm } from "../../upload.ts";
 
 export function TankDocuments({ tank, checks, onChange }: { tank: Tank; checks: DocumentCheck[]; onChange: () => void }) {
   const [busy, setBusy] = useState<string | null>(null);
@@ -11,13 +12,12 @@ export function TankDocuments({ tank, checks, onChange }: { tank: Tank; checks: 
   const upload = async (kind: string, file: File) => {
     setBusy(kind);
     setError(null);
-    const form = new FormData();
-    form.set("file", file);
-    form.set("kind", kind);
-    // The permit is a site document; everything else belongs to this tank.
-    if (kind === "omgevingsvergunning") form.set("siteId", tank.siteId);
-    else form.set("tankIds", tank.id);
     try {
+      // The permit is a site document; everything else belongs to this tank.
+      const form = await uploadForm(
+        file,
+        kind === "omgevingsvergunning" ? { kind, siteId: tank.siteId } : { kind, tankIds: tank.id },
+      );
       await api.post("/documents", form);
       onChange();
     } catch (e) {

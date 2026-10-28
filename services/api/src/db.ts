@@ -1,18 +1,53 @@
-import { DatabaseSync } from "node:sqlite";
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
-
 /**
- * SQLite storage (built into Node, no native build step). Domain objects are stored as JSON
- * validated by the shared Zod schemas; every table that holds owner data carries company_id and
- * every query filters on it (row-level access per company).
+ * Database access, independent of the database engine.
  *
+ * - Locally and in tests: SQLite built into Node (./db-sqlite.ts), no setup needed.
+ * - On Netlify: Postgres from Netlify Database (./db-pg.ts).
+ *
+ * Domain objects are stored as JSON validated by the shared Zod schemas; every table that holds
+ * owner data carries company_id and every query filters on it (row-level access per company).
+ * SQL is written once, in the common subset of SQLite and Postgres, with `?` placeholders.
  * Inspector data (KeurKompas) will live in its own tables with its own sessions; no owner route
  * reads them.
  */
 
-const SCHEMA = `
-CREATE TABLE IF NOT EXISTS companies (
+export type Param = string | number | null;
+export type Row = Record<string, unknown>;
+
+export interface Db {
+  all<T = Row>(sql: string, params: Param[]): Promise<T[]>;
+  /** Runs `fn` in one transaction; `fn` gets a Db bound to that transaction. */
+  transaction<T>(fn: (db: Db) => Promise<T>): Promise<T>;
+  close(): Promise<void>;
+}
+
+export function all<T = Row>(db: Db, sql: string, ...params: Param[]): Promise<T[]> {
+  return db.all<T>(sql, params);
+}
+
+export async function get<T = Row>(db: Db, sql: string, ...params: Param[]): Promise<T | undefined> {
+  return (await db.all<T>(sql, params))[0];
+}
+
+export async function run(db: Db, sql: string, ...params: Param[]): Promise<void> {
+  await db.all(sql, params);
+}
+
+export function tx<T>(db: Db, fn: (db: Db) => Promise<T>): Promise<T> {
+  return db.transaction(fn);
+}
+
+/** COUNT(*) comes back as a number in SQLite and as a string in Postgres. */
+export async function count(db: Db, sql: string, ...params: Param[]): Promise<number> {
+  const row = await get<{ n: number | string }>(db, sql, ...params);
+  return Number(row?.n ?? 0);
+}
+
+/**
+ * The schema, valid in both SQLite and Postgres. On Netlify it is applied by Netlify Database
+ * from netlify/database/migrations (a test checks that the first migration matches this text).
+ */
+export const SCHEMA = `CREATE TABLE IF NOT EXISTS companies (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   vat_number TEXT,
@@ -29,6 +64,7 @@ CREATE TABLE IF NOT EXISTS company_members (
   company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL REFERENCES owner_users(id) ON DELETE CASCADE,
   role TEXT NOT NULL DEFAULT 'member',
+  created_at TEXT NOT NULL,
   PRIMARY KEY (company_id, user_id)
 );
 CREATE TABLE IF NOT EXISTS owner_sessions (
@@ -46,7 +82,8 @@ CREATE TABLE IF NOT EXISTS magic_tokens (
 CREATE TABLE IF NOT EXISTS sites (
   id TEXT PRIMARY KEY,
   company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-  data TEXT NOT NULL
+  data TEXT NOT NULL,
+  created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS tanks (
   id TEXT PRIMARY KEY,
@@ -60,7 +97,8 @@ CREATE TABLE IF NOT EXISTS documents (
   id TEXT PRIMARY KEY,
   company_id TEXT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   data TEXT NOT NULL,
-  storage_path TEXT NOT NULL
+  storage_path TEXT NOT NULL,
+  created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS precheck_photos (
   id TEXT PRIMARY KEY,
@@ -103,40 +141,5 @@ CREATE INDEX IF NOT EXISTS idx_tanks_company ON tanks(company_id);
 CREATE INDEX IF NOT EXISTS idx_sites_company ON sites(company_id);
 CREATE INDEX IF NOT EXISTS idx_documents_company ON documents(company_id);
 CREATE INDEX IF NOT EXISTS idx_precheck_tank ON precheck_photos(company_id, tank_id);
+CREATE INDEX IF NOT EXISTS idx_members_user ON company_members(user_id);
 `;
-
-export type Db = DatabaseSync;
-
-export function openDb(path: string): Db {
-  if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
-  const db = new DatabaseSync(path);
-  db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
-  db.exec(SCHEMA);
-  return db;
-}
-
-type Row = Record<string, unknown>;
-
-export function all<T = Row>(db: Db, sql: string, ...params: (string | number | null)[]): T[] {
-  return db.prepare(sql).all(...params) as T[];
-}
-
-export function get<T = Row>(db: Db, sql: string, ...params: (string | number | null)[]): T | undefined {
-  return db.prepare(sql).get(...params) as T | undefined;
-}
-
-export function run(db: Db, sql: string, ...params: (string | number | null)[]): void {
-  db.prepare(sql).run(...params);
-}
-
-export function tx<T>(db: Db, fn: () => T): T {
-  db.exec("BEGIN");
-  try {
-    const out = fn();
-    db.exec("COMMIT");
-    return out;
-  } catch (e) {
-    db.exec("ROLLBACK");
-    throw e;
-  }
-}

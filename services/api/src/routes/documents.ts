@@ -19,10 +19,10 @@ const ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp
 export function documentRoutes(deps: Deps) {
   const app = new Hono<AppEnv>();
 
-  app.get("/documents", (c) => {
+  app.get("/documents", async (c) => {
     const companyId = requireCompany(c);
-    const docs = listDocuments(deps.db, companyId);
-    const checklist = listTanks(deps.db, companyId).map((t) => ({
+    const docs = await listDocuments(deps.db, companyId);
+    const checklist = (await listTanks(deps.db, companyId)).map((t) => ({
       tankId: t.id,
       label: t.label,
       documents: checkDocuments(t, docs),
@@ -32,18 +32,18 @@ export function documentRoutes(deps: Deps) {
 
   app.post("/documents", async (c) => {
     const companyId = requireCompany(c);
-    const { file, bytes, form } = await uploadedFile(c);
+    const { file, bytes, form } = await uploadedFile(c, deps);
     if (!ALLOWED_TYPES.includes(file.type)) {
       throw new HTTPException(415, { message: "Upload een PDF of een foto (JPG, PNG, WEBP)." });
     }
     const tankIds = typeof form.tankIds === "string" && form.tankIds ? form.tankIds.split(",") : [];
-    for (const id of tankIds) if (!getTank(deps.db, companyId, id)) throw new HTTPException(400, { message: "Onbekende tank." });
+    for (const id of tankIds) if (!(await getTank(deps.db, companyId, id))) throw new HTTPException(400, { message: "Onbekende tank." });
     const siteId = typeof form.siteId === "string" && form.siteId ? form.siteId : null;
-    if (siteId && !getSite(deps.db, companyId, siteId)) throw new HTTPException(400, { message: "Onbekende site." });
+    if (siteId && !(await getSite(deps.db, companyId, siteId))) throw new HTTPException(400, { message: "Onbekende site." });
     const chosenKind = DocumentKind.safeParse(form.kind);
 
     const id = newId("doc");
-    const path = deps.storage.save(companyId, id, bytes);
+    const path = await deps.storage.save(companyId, id, bytes);
     let doc = VaultDocument.parse({
       id,
       companyId,
@@ -56,7 +56,7 @@ export function documentRoutes(deps: Deps) {
       siteId,
       uploadedAt: new Date().toISOString(),
     });
-    saveDocument(deps.db, doc, path);
+    await saveDocument(deps.db, doc, path);
 
     // Extraction is best effort: the upload itself always succeeds.
     let extraction: { status: "done" | "skipped" | "failed"; logId?: string; message?: string } = { status: "skipped" };
@@ -70,8 +70,8 @@ export function documentRoutes(deps: Deps) {
           facts: extractionToFacts(e),
           factsConfirmed: false,
         });
-        saveDocument(deps.db, doc);
-        const logId = logAi(deps.db, {
+        await saveDocument(deps.db, doc);
+        const logId = await logAi(deps.db, {
           companyId,
           feature: "extract_document",
           input: { documentId: id, filename: file.name, mimeType: file.type },
@@ -89,10 +89,10 @@ export function documentRoutes(deps: Deps) {
     return c.json({ document: doc, extraction }, 201);
   });
 
-  app.get("/documents/:id/file", (c) => {
+  app.get("/documents/:id/file", async (c) => {
     const companyId = requireCompany(c);
-    const found = getDocument(deps.db, companyId, c.req.param("id")) ?? notFound("Document niet gevonden");
-    return c.body(new Uint8Array(deps.storage.read(found.storagePath)), 200, {
+    const found = (await getDocument(deps.db, companyId, c.req.param("id"))) ?? notFound("Document niet gevonden");
+    return c.body(new Uint8Array(await deps.storage.read(found.storagePath)), 200, {
       "Content-Type": found.doc.mimeType,
       "Content-Disposition": `inline; filename="${encodeURIComponent(found.doc.filename)}"`,
     });
@@ -100,7 +100,7 @@ export function documentRoutes(deps: Deps) {
 
   app.put("/documents/:id", async (c) => {
     const companyId = requireCompany(c);
-    const found = getDocument(deps.db, companyId, c.req.param("id")) ?? notFound("Document niet gevonden");
+    const found = (await getDocument(deps.db, companyId, c.req.param("id"))) ?? notFound("Document niet gevonden");
     const body = await parseJson(
       c,
       z.object({
@@ -112,18 +112,18 @@ export function documentRoutes(deps: Deps) {
         factsConfirmed: z.boolean(),
       }),
     );
-    for (const id of body.tankIds) if (!getTank(deps.db, companyId, id)) throw new HTTPException(400, { message: "Onbekende tank." });
-    if (body.siteId && !getSite(deps.db, companyId, body.siteId)) throw new HTTPException(400, { message: "Onbekende site." });
+    for (const id of body.tankIds) if (!(await getTank(deps.db, companyId, id))) throw new HTTPException(400, { message: "Onbekende tank." });
+    if (body.siteId && !(await getSite(deps.db, companyId, body.siteId))) throw new HTTPException(400, { message: "Onbekende site." });
     const doc = VaultDocument.parse({ ...found.doc, ...body });
-    saveDocument(deps.db, doc);
+    await saveDocument(deps.db, doc);
     return c.json(doc);
   });
 
-  app.delete("/documents/:id", (c) => {
+  app.delete("/documents/:id", async (c) => {
     const companyId = requireCompany(c);
-    const found = getDocument(deps.db, companyId, c.req.param("id")) ?? notFound("Document niet gevonden");
-    deps.storage.remove(found.storagePath);
-    run(deps.db, "DELETE FROM documents WHERE company_id = ? AND id = ?", companyId, found.doc.id);
+    const found = (await getDocument(deps.db, companyId, c.req.param("id"))) ?? notFound("Document niet gevonden");
+    await run(deps.db, "DELETE FROM documents WHERE company_id = ? AND id = ?", companyId, found.doc.id);
+    await deps.storage.remove(found.storagePath);
     return c.json({ ok: true });
   });
 
@@ -133,9 +133,9 @@ export function documentRoutes(deps: Deps) {
    */
   app.post("/documents/:id/apply-to-tank", async (c) => {
     const companyId = requireCompany(c);
-    const found = getDocument(deps.db, companyId, c.req.param("id")) ?? notFound("Document niet gevonden");
+    const found = (await getDocument(deps.db, companyId, c.req.param("id"))) ?? notFound("Document niet gevonden");
     const body = await parseJson(c, z.object({ tankId: z.string(), inspectionType: InspectionType }));
-    const tank = getTank(deps.db, companyId, body.tankId) ?? notFound("Tank niet gevonden");
+    const tank = (await getTank(deps.db, companyId, body.tankId)) ?? notFound("Tank niet gevonden");
     const { doc } = found;
     if (!["inspection_report", "commissioning_report"].includes(doc.kind)) {
       throw new HTTPException(400, { message: "Alleen keuringsverslagen kunnen verwerkt worden." });
@@ -164,8 +164,8 @@ export function documentRoutes(deps: Deps) {
               .map((text) => ({ id: newId("fnd"), text, resolved: false, proofDocumentIds: [] })),
           ]
         : tank.orangeFindings;
-    const saved = saveTank(deps.db, { ...tank, inspections, orangeFindings });
-    if (!doc.tankIds.includes(tank.id)) saveDocument(deps.db, { ...doc, tankIds: [...doc.tankIds, tank.id] });
+    const saved = await saveTank(deps.db, { ...tank, inspections, orangeFindings });
+    if (!doc.tankIds.includes(tank.id)) await saveDocument(deps.db, { ...doc, tankIds: [...doc.tankIds, tank.id] });
     return c.json(saved);
   });
 

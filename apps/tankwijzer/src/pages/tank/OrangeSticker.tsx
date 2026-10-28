@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { OrangeFinding, VaultDocument } from "@tankwijzer/vlarem-core";
 import { api, formatDate, type TankDetail } from "../../api.ts";
 import { Disclaimer, ErrorBox } from "../../components/ui.tsx";
+import { uploadForm } from "../../upload.ts";
 
 export function OrangeSticker({ detail, onChange }: { detail: TankDetail; onChange: () => void }) {
   const { tank, latestSticker, evaluation } = detail;
@@ -22,11 +23,8 @@ export function OrangeSticker({ detail, onChange }: { detail: TankDetail; onChan
   };
 
   const uploadProof = async (finding: OrangeFinding, file: File) => {
-    const form = new FormData();
-    form.set("file", file);
-    form.set("kind", "repair_proof");
-    form.set("tankIds", tank.id);
     try {
+      const form = await uploadForm(file, { kind: "repair_proof", tankIds: tank.id });
       const res = await api.post<{ document: VaultDocument }>("/documents", form);
       await save(findings.map((f) => (f.id === finding.id ? { ...f, proofDocumentIds: [...f.proofDocumentIds, res.document.id] } : f)));
     } catch (e) {

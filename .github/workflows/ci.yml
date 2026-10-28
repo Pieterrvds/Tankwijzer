@@ -8,6 +8,19 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      # Same engine as Netlify Database, so the API tests also run on Postgres.
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: tw
+          POSTGRES_PASSWORD: tw
+          POSTGRES_DB: tankwijzer_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U tw" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_PG_URL: postgres://tw:tw@localhost:5432/tankwijzer_test
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -21,3 +34,4 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - run: pnpm --filter @tankwijzer/api bundle:netlify

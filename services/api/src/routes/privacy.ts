@@ -10,51 +10,65 @@ import { OWNER_COOKIE } from "./auth.ts";
 export function privacyRoutes(deps: Deps) {
   const app = new Hono<AppEnv>();
 
-  app.get("/export", (c) => {
+  app.get("/export", async (c) => {
     const companyId = requireCompany(c);
-    const docs = all<{ data: string; storage_path: string }>(
+    const docs = await all<{ data: string; storage_path: string }>(
       deps.db,
       "SELECT data, storage_path FROM documents WHERE company_id = ?",
       companyId,
     );
-    const photos = all<{ id: string; tank_id: string; step: string; storage_path: string; mime_type: string; result: string | null; created_at: string }>(
-      deps.db,
-      "SELECT * FROM precheck_photos WHERE company_id = ?",
-      companyId,
-    );
-    const readB64 = (p: string) => {
+    const photos = await all<{
+      id: string;
+      tank_id: string;
+      step: string;
+      storage_path: string;
+      mime_type: string;
+      result: string | null;
+      created_at: string;
+    }>(deps.db, "SELECT * FROM precheck_photos WHERE company_id = ?", companyId);
+    const readB64 = async (p: string) => {
       try {
-        return deps.storage.read(p).toString("base64");
+        return Buffer.from(await deps.storage.read(p)).toString("base64");
       } catch {
         return null;
       }
     };
     const payload = {
       exportedAt: new Date().toISOString(),
-      company: getCompany(deps.db, companyId),
-      members: all(
+      company: await getCompany(deps.db, companyId),
+      members: await all(
         deps.db,
         "SELECT u.email, m.role FROM company_members m JOIN owner_users u ON u.id = m.user_id WHERE m.company_id = ?",
         companyId,
       ),
-      sites: listSites(deps.db, companyId),
-      tanks: listTanks(deps.db, companyId),
-      documents: docs.map((d) => ({ ...JSON.parse(d.data), contentBase64: readB64(d.storage_path) })),
-      precheckPhotos: photos.map((p) => ({
-        id: p.id,
-        tankId: p.tank_id,
-        step: p.step,
-        takenAt: p.created_at,
-        mimeType: p.mime_type,
-        result: p.result ? JSON.parse(p.result) : null,
-        contentBase64: readB64(p.storage_path),
-      })),
-      bookings: all<{ data: string; created_at: string }>(
-        deps.db,
-        "SELECT data, created_at FROM bookings WHERE company_id = ?",
-        companyId,
+      sites: await listSites(deps.db, companyId),
+      tanks: await listTanks(deps.db, companyId),
+      documents: await Promise.all(
+        docs.map(async (d) => ({ ...JSON.parse(d.data), contentBase64: await readB64(d.storage_path) })),
+      ),
+      precheckPhotos: await Promise.all(
+        photos.map(async (p) => ({
+          id: p.id,
+          tankId: p.tank_id,
+          step: p.step,
+          takenAt: p.created_at,
+          mimeType: p.mime_type,
+          result: p.result ? JSON.parse(p.result) : null,
+          contentBase64: await readB64(p.storage_path),
+        })),
+      ),
+      bookings: (
+        await all<{ data: string; created_at: string }>(
+          deps.db,
+          "SELECT data, created_at FROM bookings WHERE company_id = ?",
+          companyId,
+        )
       ).map((b) => ({ createdAt: b.created_at, ...JSON.parse(b.data) })),
-      aiLog: all(deps.db, "SELECT feature, input, output, feedback, created_at FROM ai_log WHERE company_id = ?", companyId),
+      aiLog: await all(
+        deps.db,
+        "SELECT feature, input, output, feedback, created_at FROM ai_log WHERE company_id = ?",
+        companyId,
+      ),
     };
     return c.body(JSON.stringify(payload, null, 2), 200, {
       "Content-Type": "application/json",
@@ -64,29 +78,29 @@ export function privacyRoutes(deps: Deps) {
 
   app.delete("/company", async (c) => {
     const companyId = requireCompany(c);
-    const company = getCompany(deps.db, companyId)!;
+    const company = (await getCompany(deps.db, companyId))!;
     const { confirmName } = await parseJson(c, z.object({ confirmName: z.string() }));
     if (confirmName.trim() !== company.name) {
       return c.json({ error: "Typ de exacte bedrijfsnaam om te bevestigen." }, 400);
     }
-    const members = all<{ user_id: string; email: string }>(
+    const members = await all<{ user_id: string; email: string }>(
       deps.db,
       "SELECT m.user_id, u.email FROM company_members m JOIN owner_users u ON u.id = m.user_id WHERE m.company_id = ?",
       companyId,
     );
-    tx(deps.db, () => {
-      run(deps.db, "DELETE FROM companies WHERE id = ?", companyId); // cascades to all company data
+    await tx(deps.db, async (t) => {
+      await run(t, "DELETE FROM companies WHERE id = ?", companyId); // cascades to all company data
       for (const m of members) {
-        run(
-          deps.db,
+        await run(
+          t,
           "DELETE FROM owner_users WHERE id = ? AND NOT EXISTS (SELECT 1 FROM company_members WHERE user_id = ?)",
           m.user_id,
           m.user_id,
         );
-        run(deps.db, "DELETE FROM magic_tokens WHERE email = ?", m.email);
+        await run(t, "DELETE FROM magic_tokens WHERE email = ?", m.email);
       }
     });
-    deps.storage.removeCompany(companyId);
+    await deps.storage.removeCompany(companyId);
     deleteCookie(c, OWNER_COOKIE, { path: "/" });
     return c.json({ ok: true });
   });

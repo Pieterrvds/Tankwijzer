@@ -25,7 +25,8 @@ packages/
   ai/              # shared Claude clients: photo reading, document extraction,
                    # pre-check, grounded "Vraag het", output guards
 services/
-  api/             # backend (Hono + SQLite); owner auth realm, company-scoped data
+  api/             # backend (Hono): SQLite locally, Netlify Database + Blobs online; owner auth
+                   # realm, company-scoped data
 ```
 
 ## Run it locally
@@ -69,6 +70,33 @@ pnpm dev:keurkompas        # KeurKompas dev server
 ```bash
 pnpm reminders   # daily job: email reminders 3 months and 1 month before deadlines
 ```
+
+The API tests run on SQLite and, when `TEST_PG_URL` points to a Postgres database, also on
+Postgres (CI always does both).
+
+## Online on Netlify
+
+Tankwijzer runs fully on Netlify (`netlify.toml`):
+
+- the web app is served as static files (`apps/tankwijzer/dist`);
+- the API runs as a Netlify Function on `/api/*` (`services/api/netlify/functions/api.mts`), with
+  a daily scheduled function for email reminders;
+- data lives in **Netlify Database** (Postgres; the schema is applied on every deploy from
+  `netlify/database/migrations`), files in **Netlify Blobs**.
+
+Settings on Netlify (one time):
+
+1. *Site configuration → Build & deploy*: repository `Pieterrvds/Tankwijzer`, branch `main`,
+   **base directory empty** (build command and publish directory come from `netlify.toml`).
+2. *Environment variables*: `ANTHROPIC_API_KEY` (AI features); for a test phase
+   `DEV_MAGIC_LINK=1` (login without email — no real customer data); for real use
+   `BREVO_API_KEY` + `MAIL_FROM` instead; `INSPECTION_BODY_EMAIL`.
+3. Deploy. Netlify creates the database on the first deploy with migrations (Netlify Database is
+   available on credit-based plans).
+
+Limits to know: uploads max. 4 MB (photos are shrunk in the browser first); one request max.
+60 s (AI calls fit); functions run in Ohio (US) unless the region is changed to Frankfurt
+(*Functions → Region*, Pro plan) — relevant for GDPR.
 
 ## How it fits together
 

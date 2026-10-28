@@ -16,10 +16,12 @@
 ## Technical choices
 
 - **TypeScript everywhere, pnpm workspaces.** Packages are consumed as source (no build step) to keep things simple.
-- **SQLite via `node:sqlite`** (built into Node 22, no native build). Domain objects are stored as JSON validated by the shared Zod schemas. Move to Postgres (EU region) when hosting is chosen; the repo layer is the only place with SQL.
+- **Database: SQLite locally, Postgres online.** One async database layer (`services/api/src/db.ts`) with two drivers: `node:sqlite` for local development and tests, and Netlify Database (Postgres) online. SQL is written once in the common subset of both; the API tests run on both engines. Domain objects are stored as JSON validated by the shared Zod schemas.
+- **Hosting: everything on Netlify** (chosen by the user): static web app, API as a Netlify Function, Netlify Database, Netlify Blobs for files, a scheduled function for reminders. The API is pre-bundled into one file (`pnpm --filter @tankwijzer/api bundle:netlify`) because Netlify's bundler does not include this monorepo's own packages.
 - **Hono** for the API: small, typed, easy to test without a running server.
 - **Claude** (`claude-opus-5-5`, overridable with `TANKWIJZER_AI_MODEL`) with structured outputs and server-side refusal fallback enabled.
-- **Mailer** writes to `DATA_DIR/outbox`; swap for an EU email provider in `services/api/src/mailer.ts`.
+- **Email**: locally to `DATA_DIR/outbox`; online through Brevo (EU) when `BREVO_API_KEY` is set. Without an email service, login only works in test mode (`DEV_MAGIC_LINK=1`), which the app shows with a warning banner.
+- **Uploads** are limited to 4 MB on Netlify; the web app shrinks photos (long side 2000 px, JPEG) before uploading.
 
 ## Merging the KeurKompas and Tankwijzer rules
 
@@ -56,5 +58,6 @@
 - Fill in the `te bevestigen` articles from the VLAREM text, and add that text to `packages/vlarem-core/knowledge/text`.
 - Inspector auth realm and the dossier import in KeurKompas.
 - Archive `Pieterrvds/myapp` once KeurKompas is deployed from this repository.
-- Real email delivery, EU hosting, and the paid plan.
+- Brevo account for real email (then switch off `DEV_MAGIC_LINK`), and the Frankfurt functions region on Netlify (Pro plan) for EU processing.
+- The paid plan.
 - Inbox screen for the inspection body (v1 is email).

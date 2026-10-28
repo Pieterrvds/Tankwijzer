@@ -42,6 +42,9 @@ export interface Me {
   company: Company | null;
   limits: { plan: string; tankLimit: number | null; tankCount: number } | null;
   aiEnabled: boolean;
+  /** Test mode: login without email check — never for real customer data. */
+  testMode: boolean;
+  uploadLimitBytes: number;
 }
 
 export interface TankSummary {

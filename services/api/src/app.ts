@@ -12,7 +12,7 @@ import { tankRoutes } from "./routes/tanks.ts";
 
 export function createApp(deps: Deps) {
   const app = new Hono<AppEnv>();
-  const appOrigin = new URL(deps.config.appUrl).origin;
+  const configuredOrigin = deps.config.appUrl ? new URL(deps.config.appUrl).origin : null;
 
   app.onError((err, c) => {
     if (err instanceof HTTPException) return c.json({ error: err.message }, err.status);
@@ -23,12 +23,13 @@ export function createApp(deps: Deps) {
   // Cookie auth + state-changing requests: reject cross-site origins (CSRF defence on top of SameSite=Lax).
   app.use("/api/*", async (c, next) => {
     const origin = c.req.header("origin");
-    if (!["GET", "HEAD", "OPTIONS"].includes(c.req.method) && origin && origin !== appOrigin) {
+    const allowed = origin === new URL(c.req.url).origin || origin === configuredOrigin;
+    if (!["GET", "HEAD", "OPTIONS"].includes(c.req.method) && origin && !allowed) {
       return c.json({ error: "Ongeldige oorsprong." }, 403);
     }
     await next();
   });
-  app.use("/api/*", bodyLimit({ maxSize: 16 * 1024 * 1024, onError: (c) => c.json({ error: "Bestand is te groot." }, 413) }));
+  app.use("/api/*", bodyLimit({ maxSize: deps.config.maxUploadBytes + 1024 * 1024, onError: (c) => c.json({ error: "Bestand is te groot." }, 413) }));
 
   app.get("/api/health", (c) => c.json({ ok: true }));
   app.route("/api/auth", authRoutes(deps));

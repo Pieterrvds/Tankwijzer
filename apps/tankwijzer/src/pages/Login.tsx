@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router";
 import { api } from "../api.ts";
 import { ErrorBox } from "../components/ui.tsx";
@@ -12,6 +12,14 @@ export function LoginPage() {
     params.get("fout") === "link" ? "Deze aanmeldlink is verlopen of al gebruikt. Vraag een nieuwe aan." : null,
   );
   const [busy, setBusy] = useState(false);
+  const [testMode, setTestMode] = useState(false);
+
+  useEffect(() => {
+    api
+      .get<{ testMode: boolean }>("/auth/mode")
+      .then((m) => setTestMode(m.testMode))
+      .catch(() => setTestMode(false));
+  }, []);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -59,6 +67,11 @@ export function LoginPage() {
           </form>
         )}
         <ErrorBox message={error} />
+        {testMode && (
+          <p className="alert alert-warn small">
+            Testversie: u kunt zich aanmelden zonder e-mailcontrole. Voer geen echte bedrijfsgegevens in.
+          </p>
+        )}
         <p className="disclaimer">Tankwijzer vervangt geen keuring door een erkend milieudeskundige.</p>
       </div>
     </div>

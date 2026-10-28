@@ -6,6 +6,7 @@ import { useMe } from "../App.tsx";
 import { emptyDraft, TankForm, type TankDraft } from "../components/TankForm.tsx";
 import { emptyInspection, InspectionFields, type InspectionDraft } from "../components/InspectionFields.tsx";
 import { Card, ErrorBox, Feedback, Loading, useAsync } from "../components/ui.tsx";
+import { uploadForm } from "../upload.ts";
 
 interface ReadPhotoResponse {
   logId: string;
@@ -37,10 +38,8 @@ export function TankNewPage() {
 
   const readPhoto = async (hint: string, file: File) => {
     setPhotos((p) => ({ ...p, [hint]: { status: "Foto wordt gelezen…" } }));
-    const form = new FormData();
-    form.set("file", file);
-    form.set("hint", hint);
     try {
+      const form = await uploadForm(file, { hint });
       const res = await api.post<ReadPhotoResponse>("/ai/read-photo", form);
       if (res.reading.photo_quality === "retake") {
         setPhotos((p) => ({ ...p, [hint]: { status: res.reading.retake_reason_nl ?? "Neem een nieuwe foto.", logId: res.logId } }));
